@@ -9,7 +9,7 @@ const navItems = [
   { href: "/admin/stats", label: "통계 분석" },
 ];
 
-export default function AdminLayout({
+export default function AdminDashboardLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -17,7 +17,9 @@ export default function AdminLayout({
   return (
     <div className="bg-background flex min-h-screen">
       <aside className="flex w-56 flex-col border-r p-4">
-        <div className="text-brand mb-4 font-bold">Moija Admin</div>
+        <Link href="/admin" className="text-brand mb-4 block font-bold">
+          Moija Admin
+        </Link>
         <div className="flex flex-1 flex-col gap-1">
           {navItems.map((item) => (
             <Link
