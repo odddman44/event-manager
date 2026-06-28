@@ -12,23 +12,23 @@ Base commit: d773406
 
 ## Tasks
 
-| Task  | Description                                     | Status  | Commits |
-| ----- | ----------------------------------------------- | ------- | ------- |
-| PRE   | 스타터 템플릿 정리 (starter-cleaner)            | pending | -       |
-| 001   | Next.js 초기화 + TailwindCSS v4 + 레이어드 구조 | pending | -       |
-| 002   | Supabase 클라이언트 설정 검증                   | pending | -       |
-| 003   | DB 스키마 (events, participants) + RLS          | pending | -       |
-| 004   | 공통 타입 + 라우트 스캐폴딩                     | pending | -       |
-| 005   | 회원가입/로그인/로그아웃 (F010)                 | pending | -       |
-| 006   | 접근 제어 미들웨어                              | pending | -       |
-| 007   | 이벤트 생성 (F001)                              | pending | -       |
-| 008   | 내 이벤트 목록 (F002)                           | pending | -       |
-| 009   | 이벤트 관리 (F003)                              | pending | -       |
-| 010   | 비회원 참여 신청 (F004)                         | pending | -       |
-| 011   | 참여 상태 변경 (F005)                           | pending | -       |
-| 011-1 | 주최자-참여자 통합 플로우 테스트                | pending | -       |
-| 012   | 플랫폼 통계 조회 (F006)                         | pending | -       |
-| 013   | 전체 이벤트 관리 (F007)                         | pending | -       |
-| 014   | 전체 사용자 관리 (F008)                         | pending | -       |
-| 015   | 전체 E2E 통합 테스트                            | pending | -       |
-| 016   | Vercel 배포                                     | pending | -       |
+| Task  | Description                                     | Status   | Commits                     |
+| ----- | ----------------------------------------------- | -------- | --------------------------- |
+| PRE   | 스타터 템플릿 정리 (starter-cleaner)            | complete | d773406..885073f            |
+| 001   | Next.js 초기화 + TailwindCSS v4 + 레이어드 구조 | complete | 885073f..e7e4ba7            |
+| 002   | Supabase 클라이언트 설정 검증                   | complete | (검증만, 변경 없음) e7e4ba7 |
+| 003   | DB 스키마 (events, participants) + RLS          | complete | e7e4ba7..f3d3ef6            |
+| 004   | 공통 타입 + 라우트 스캐폴딩                     | complete | -                           |
+| 005   | 회원가입/로그인/로그아웃 (F010)                 | pending  | -                           |
+| 006   | 접근 제어 미들웨어                              | pending  | -                           |
+| 007   | 이벤트 생성 (F001)                              | pending  | -                           |
+| 008   | 내 이벤트 목록 (F002)                           | pending  | -                           |
+| 009   | 이벤트 관리 (F003)                              | pending  | -                           |
+| 010   | 비회원 참여 신청 (F004)                         | pending  | -                           |
+| 011   | 참여 상태 변경 (F005)                           | pending  | -                           |
+| 011-1 | 주최자-참여자 통합 플로우 테스트                | pending  | -                           |
+| 012   | 플랫폼 통계 조회 (F006)                         | pending  | -                           |
+| 013   | 전체 이벤트 관리 (F007)                         | pending  | -                           |
+| 014   | 전체 사용자 관리 (F008)                         | pending  | -                           |
+| 015   | 전체 E2E 통합 테스트                            | pending  | -                           |
+| 016   | Vercel 배포                                     | pending  | -                           |
