@@ -3,7 +3,6 @@
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
-import { GoogleLoginButton } from "@/components/google-login-button";
 import {
   Card,
   CardContent,
@@ -21,9 +20,9 @@ export function SignUpForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [repeatPassword, setRepeatPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -34,24 +33,19 @@ export function SignUpForm({
     setIsLoading(true);
     setError(null);
 
-    if (password !== repeatPassword) {
-      setError("Passwords do not match");
-      setIsLoading(false);
-      return;
-    }
-
     try {
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
+          data: { full_name: fullName },
           emailRedirectTo: `${window.location.origin}/protected`,
         },
       });
       if (error) throw error;
       router.push("/auth/sign-up-success");
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred");
+      setError(error instanceof Error ? error.message : "오류가 발생했습니다");
     } finally {
       setIsLoading(false);
     }
@@ -59,35 +53,39 @@ export function SignUpForm({
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card>
+      <Card className="rounded-card">
         <CardHeader>
-          <CardTitle className="text-2xl">Sign up</CardTitle>
-          <CardDescription>Create a new account</CardDescription>
+          <CardTitle className="text-2xl">회원가입</CardTitle>
+          <CardDescription>계정을 만들고 이벤트를 시작하세요</CardDescription>
         </CardHeader>
         <CardContent>
-          <GoogleLoginButton />
-          <div className="my-4 flex items-center gap-2 text-xs text-muted-foreground">
-            <div className="h-px flex-1 bg-border" />
-            OR CONTINUE WITH EMAIL
-            <div className="h-px flex-1 bg-border" />
-          </div>
           <form onSubmit={handleSignUp}>
             <div className="flex flex-col gap-6">
+              {/* 이름 필드 */}
               <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="full-name">이름</Label>
+                <Input
+                  id="full-name"
+                  type="text"
+                  placeholder="홍길동"
+                  required
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="email">이메일</Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="m@example.com"
+                  placeholder="example@email.com"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
               <div className="grid gap-2">
-                <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
-                </div>
+                <Label htmlFor="password">비밀번호</Label>
                 <Input
                   id="password"
                   type="password"
@@ -96,27 +94,20 @@ export function SignUpForm({
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
-              <div className="grid gap-2">
-                <div className="flex items-center">
-                  <Label htmlFor="repeat-password">Repeat Password</Label>
-                </div>
-                <Input
-                  id="repeat-password"
-                  type="password"
-                  required
-                  value={repeatPassword}
-                  onChange={(e) => setRepeatPassword(e.target.value)}
-                />
-              </div>
+              {/* 에러 메시지 영역 */}
               {error && <p className="text-sm text-red-500">{error}</p>}
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Creating an account..." : "Sign up"}
+              <Button
+                type="submit"
+                className="bg-brand hover:bg-brand/90 w-full text-white"
+                disabled={isLoading}
+              >
+                {isLoading ? "가입 중..." : "회원가입"}
               </Button>
             </div>
             <div className="mt-4 text-center text-sm">
-              Already have an account?{" "}
+              이미 계정이 있으신가요?{" "}
               <Link href="/auth/login" className="underline underline-offset-4">
-                Login
+                로그인
               </Link>
             </div>
           </form>
