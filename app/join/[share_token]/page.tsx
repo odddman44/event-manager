@@ -175,35 +175,6 @@ export default function JoinPage() {
             </p>
           </div>
         )}
-
-        {/* 개발 편의: 상태 전환 토글 */}
-        <div className="rounded-card border border-dashed border-gray-300 p-3">
-          <p className="mb-2 text-center text-xs text-gray-400">
-            개발용 상태 전환
-          </p>
-          <div className="grid grid-cols-2 gap-2">
-            {(
-              [
-                ["form", "신규 폼"],
-                ["completed", "완료"],
-                ["cancelled", "취소됨"],
-                ["full", "정원 초과"],
-              ] as [PageState, string][]
-            ).map(([s, label]) => (
-              <button
-                key={s}
-                onClick={() => setState(s)}
-                className={`rounded border px-2 py-1 text-xs transition-colors ${
-                  state === s
-                    ? "bg-brand border-brand text-white"
-                    : "border-gray-200 text-gray-500 hover:bg-gray-50"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
       </div>
     </main>
   );
