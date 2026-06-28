@@ -4,7 +4,7 @@
 
 ## 현재 상태
 
-- **진행 단계**: Phase 1 (라우트 스캐폴딩 + 공통 타입) 시작 예정
+- **진행 단계**: Phase 2 (UI 마크업) 진행 중 — 5/22 Tasks 완료
 - **최종 업데이트**: 2026-06-28
 
 ## 개요
@@ -79,21 +79,21 @@
   - ✅ 회원가입 시 `profiles` 자동 생성 트리거 작성
   - ✅ `supabase gen types`로 TypeScript 타입 생성
 
-### Phase 1: 라우트 스캐폴딩 + 공통 타입
+### Phase 1: 라우트 스캐폴딩 + 공통 타입 ✅
 
 > 전체 라우트 구조와 공통 타입을 먼저 확립해 이후 UI/기능 구현의 토대를 마련
 
-- **Task 004: 공통 타입 정의 및 라우트 골격 구성** - 우선순위
-  - [ ] DB 스키마 기반 도메인 타입 및 DTO 정의 (`Profile`, `Event`, `Participant`)
-  - [ ] Zod 검증 스키마 정의 (이벤트 생성, 참여 신청, 인증 폼)
-  - [ ] App Router 전체 라우트 빈 페이지 스캐폴딩 (`/`, `/auth/login`, `/auth/signup`, `/dashboard`, `/events/new`, `/events/[id]`, `/join/[share_token]`, `/admin`, `/admin/events`, `/admin/users`)
-  - [ ] 공통 레이아웃 및 네비게이션 골격 구현
+- **Task 004: 공통 타입 정의 및 라우트 골격 구성** ✅ - 완료
+  - ✅ DB 스키마 기반 도메인 타입 및 DTO 정의 (`Profile`, `Event`, `Participant`)
+  - ✅ Zod 검증 스키마 정의 (이벤트 생성, 참여 신청, 인증 폼)
+  - ✅ App Router 전체 라우트 빈 페이지 스캐폴딩 (`/`, `/auth/login`, `/auth/signup`, `/dashboard`, `/events/new`, `/events/[id]`, `/join/[share_token]`, `/admin`, `/admin/events`, `/admin/users`)
+  - ✅ 공통 레이아웃 및 네비게이션 골격 구현
 
 ### Phase 2: UI 마크업 (더미 데이터)
 
 > 실제 데이터 연동 없이 하드코딩된 더미 데이터로 모든 화면 UI를 완성
 
-- **Task UI-001: 랜딩 페이지 + 인증 페이지 UI**
+- **Task UI-001: 랜딩 페이지 + 인증 페이지 UI** - 우선순위
   - [ ] 랜딩 페이지 — 서비스 소개 + [로그인]/[시작하기] 버튼, 럭키밀 스타일 레이아웃
   - [ ] 로그인 페이지 — 이메일/비밀번호 폼, 에러 메시지 영역, 회원가입 링크
   - [ ] 회원가입 페이지 — 이름/이메일/비밀번호 폼, 에러 메시지 영역, 로그인 링크
