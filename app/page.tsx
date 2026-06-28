@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ThemeSwitcher } from "@/components/theme-switcher";
 
 export default function Home() {
   return (
@@ -8,11 +9,14 @@ export default function Home() {
       {/* 상단 헤더 */}
       <header className="flex items-center justify-between border-b px-6 py-4">
         <span className="text-brand text-xl font-bold">모이자</span>
-        <Link href="/auth/login">
-          <Button variant="outline" size="sm">
-            로그인
-          </Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          <ThemeSwitcher />
+          <Link href="/auth/login">
+            <Button variant="outline" size="sm">
+              로그인
+            </Button>
+          </Link>
+        </div>
       </header>
 
       {/* 메인 콘텐츠 */}

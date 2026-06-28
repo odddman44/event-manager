@@ -2,7 +2,6 @@ import Link from "next/link";
 import { Users, CalendarDays, Activity, TrendingUp } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { AdminLogoutButton } from "@/components/admin-logout-button";
 
 // 더미 통계 데이터
 const stats = [
@@ -97,9 +96,11 @@ export default function AdminPage() {
   return (
     <div className="space-y-8">
       {/* 헤더 */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">어드민 대시보드</h1>
-        <AdminLogoutButton />
+      <div>
+        <h1 className="text-2xl font-bold">대시보드</h1>
+        <p className="text-muted-foreground mt-1 text-sm">
+          관리자 주요 지표와 최근 활동을 확인하세요
+        </p>
       </div>
 
       {/* 통계 카드 4개 */}

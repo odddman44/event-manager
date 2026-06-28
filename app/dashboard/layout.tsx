@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { LogoutButton } from "@/components/logout-button";
 import { BottomNav } from "@/components/bottom-nav";
+import { ThemeSwitcher } from "@/components/theme-switcher";
 
 export default function DashboardLayout({
   children,
@@ -22,6 +23,7 @@ export default function DashboardLayout({
             >
               새 이벤트
             </Link>
+            <ThemeSwitcher />
             <LogoutButton />
           </nav>
         </div>
