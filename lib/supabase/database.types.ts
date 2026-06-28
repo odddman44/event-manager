@@ -14,6 +14,88 @@ export type Database = {
   };
   public: {
     Tables: {
+      events: {
+        Row: {
+          created_at: string;
+          description: string | null;
+          event_date: string;
+          id: string;
+          location: string | null;
+          max_participants: number | null;
+          organizer_id: string;
+          share_token: string;
+          title: string;
+        };
+        Insert: {
+          created_at?: string;
+          description?: string | null;
+          event_date: string;
+          id?: string;
+          location?: string | null;
+          max_participants?: number | null;
+          organizer_id: string;
+          share_token?: string;
+          title: string;
+        };
+        Update: {
+          created_at?: string;
+          description?: string | null;
+          event_date?: string;
+          id?: string;
+          location?: string | null;
+          max_participants?: number | null;
+          organizer_id?: string;
+          share_token?: string;
+          title?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "events_organizer_id_fkey";
+            columns: ["organizer_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      participants: {
+        Row: {
+          created_at: string;
+          event_id: string;
+          guest_token: string;
+          id: string;
+          memo: string | null;
+          name: string;
+          status: Database["public"]["Enums"]["participant_status"];
+        };
+        Insert: {
+          created_at?: string;
+          event_id: string;
+          guest_token?: string;
+          id?: string;
+          memo?: string | null;
+          name: string;
+          status?: Database["public"]["Enums"]["participant_status"];
+        };
+        Update: {
+          created_at?: string;
+          event_id?: string;
+          guest_token?: string;
+          id?: string;
+          memo?: string | null;
+          name?: string;
+          status?: Database["public"]["Enums"]["participant_status"];
+        };
+        Relationships: [
+          {
+            foreignKeyName: "participants_event_id_fkey";
+            columns: ["event_id"];
+            isOneToOne: false;
+            referencedRelation: "events";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       profiles: {
         Row: {
           avatar_url: string | null;
@@ -21,6 +103,7 @@ export type Database = {
           email: string;
           full_name: string | null;
           id: string;
+          role: string;
           updated_at: string;
         };
         Insert: {
@@ -29,6 +112,7 @@ export type Database = {
           email: string;
           full_name?: string | null;
           id: string;
+          role?: string;
           updated_at?: string;
         };
         Update: {
@@ -37,6 +121,7 @@ export type Database = {
           email?: string;
           full_name?: string | null;
           id?: string;
+          role?: string;
           updated_at?: string;
         };
         Relationships: [];
@@ -49,7 +134,7 @@ export type Database = {
       [_ in never]: never;
     };
     Enums: {
-      [_ in never]: never;
+      participant_status: "registered" | "cancelled";
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -179,6 +264,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      participant_status: ["registered", "cancelled"],
+    },
   },
 } as const;
