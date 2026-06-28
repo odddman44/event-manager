@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LogoutButton } from "@/components/logout-button";
 
 export default function DashboardLayout({
   children,
@@ -19,6 +20,7 @@ export default function DashboardLayout({
             >
               새 이벤트
             </Link>
+            <LogoutButton />
           </nav>
         </div>
       </header>
