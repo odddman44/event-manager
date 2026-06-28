@@ -6,6 +6,7 @@ const navItems = [
   { href: "/admin", label: "대시보드" },
   { href: "/admin/events", label: "이벤트 관리" },
   { href: "/admin/users", label: "사용자 관리" },
+  { href: "/admin/stats", label: "통계 분석" },
 ];
 
 export default function AdminLayout({
