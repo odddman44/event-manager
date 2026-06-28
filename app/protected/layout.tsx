@@ -1,5 +1,3 @@
-import { DeployButton } from "@/components/deploy-button";
-import { EnvVarWarning } from "@/components/env-var-warning";
 import { AuthButton } from "@/components/auth-button";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { hasEnvVars } from "@/lib/utils";
@@ -17,14 +15,9 @@ export default function ProtectedLayout({
         <nav className="flex h-16 w-full justify-center border-b border-b-foreground/10">
           <div className="flex w-full max-w-5xl items-center justify-between p-3 px-5 text-sm">
             <div className="flex items-center gap-5 font-semibold">
-              <Link href={"/"}>Next.js Supabase Starter</Link>
-              <div className="flex items-center gap-2">
-                <DeployButton />
-              </div>
+              <Link href={"/"}>이벤트 매니저</Link>
             </div>
-            {!hasEnvVars ? (
-              <EnvVarWarning />
-            ) : (
+            {hasEnvVars && (
               <Suspense>
                 <AuthButton />
               </Suspense>
@@ -35,18 +28,7 @@ export default function ProtectedLayout({
           {children}
         </div>
 
-        <footer className="mx-auto flex w-full items-center justify-center gap-8 border-t py-16 text-center text-xs">
-          <p>
-            Powered by{" "}
-            <a
-              href="https://supabase.com/?utm_source=create-next-app&utm_medium=template&utm_term=nextjs"
-              target="_blank"
-              className="font-bold hover:underline"
-              rel="noreferrer"
-            >
-              Supabase
-            </a>
-          </p>
+        <footer className="mx-auto flex w-full items-center justify-center border-t py-16 text-center text-xs">
           <ThemeSwitcher />
         </footer>
       </div>
