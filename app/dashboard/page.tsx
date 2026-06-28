@@ -1,35 +1,53 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
-// 더미 이벤트 데이터 (Phase 2: 하드코딩)
+// 더미 이벤트 데이터 (Phase 2: 하드코딩 + 커버 이미지 + 주최자 아바타)
 const DUMMY_EVENTS = [
   {
     id: "1",
-    title: "팀 워크숍",
-    date: "2026-07-05T14:00",
-    location: "서울 강남구 COEX",
-    max: 20,
-    registered: 12,
+    title: "2025 개발자 네트워킹 밤",
+    coverImage: "https://picsum.photos/seed/developer/400/200",
+    date: "2025-10-21T15:36:00",
+    location: "강남구 테헤란로 152, 강남파이낸스센터",
+    max: 30,
+    registered: 8,
+    status: "모집 중",
+    organizer: {
+      name: "김민준",
+      avatar: "https://api.dicebear.com/7.x/personas/svg?seed=minjun",
+    },
   },
   {
     id: "2",
-    title: "개발자 밋업",
-    date: "2026-07-12T18:00",
-    location: null,
-    max: 50,
-    registered: 28,
+    title: "UX/UI 디자인 워크샵",
+    coverImage: "https://picsum.photos/seed/design/400/200",
+    date: "2025-10-26T10:00:00",
+    location: "홍대 크리에이티브 스튜디오",
+    max: 15,
+    registered: 14,
+    status: "거의 마감",
+    organizer: {
+      name: "김민준",
+      avatar: "https://api.dicebear.com/7.x/personas/svg?seed=minjun",
+    },
   },
   {
     id: "3",
-    title: "독서 모임",
-    date: "2026-07-20T10:00",
-    location: "홍대 카페 북스",
-    max: 8,
-    registered: 8,
+    title: "테크 블로그 작성 챌린지",
+    coverImage: "https://picsum.photos/seed/blog/400/200",
+    date: "2025-09-29T19:00:00",
+    location: "온라인 (Zoom)",
+    max: 20,
+    registered: 20,
+    status: "마감",
+    organizer: {
+      name: "김민준",
+      avatar: "https://api.dicebear.com/7.x/personas/svg?seed=minjun",
+    },
   },
 ];
 
-// 날짜 포맷: 2026년 7월 5일 오후 2:00
+// 날짜 포맷: 2025년 10월 21일 오후 3:36
 function formatDate(isoString: string): string {
   const date = new Date(isoString);
   const year = date.getFullYear();
@@ -97,23 +115,44 @@ export default function DashboardPage() {
               <Link
                 key={event.id}
                 href={`/events/${event.id}`}
-                className="rounded-card bg-card block border p-5 shadow-sm transition-shadow hover:shadow-md"
+                className="rounded-card bg-card block overflow-hidden border shadow-sm transition-shadow hover:shadow-md"
               >
-                <div className="mb-3 flex items-start justify-between gap-2">
-                  <h2 className="text-lg font-bold">{event.title}</h2>
-                  <span
-                    className={`inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold ${status.className}`}
-                  >
-                    {status.label}
-                  </span>
-                </div>
+                {/* 커버 이미지 */}
+                <img
+                  src={event.coverImage}
+                  alt={event.title}
+                  className="h-36 w-full object-cover"
+                />
 
-                <div className="text-muted-foreground space-y-1 text-sm">
-                  <p>📅 {formatDate(event.date)}</p>
-                  <p>📍 {event.location ?? "장소 미정"}</p>
-                  <p>
-                    👥 {event.registered} / {event.max}명
-                  </p>
+                <div className="p-5">
+                  <div className="mb-3 flex items-start justify-between gap-2">
+                    <h2 className="text-lg font-bold">{event.title}</h2>
+                    <span
+                      className={`inline-flex shrink-0 items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold ${status.className}`}
+                    >
+                      {status.label}
+                    </span>
+                  </div>
+
+                  <div className="text-muted-foreground space-y-1 text-sm">
+                    <p>📅 {formatDate(event.date)}</p>
+                    <p>📍 {event.location ?? "장소 미정"}</p>
+                    <p>
+                      👥 {event.registered} / {event.max}명
+                    </p>
+                  </div>
+
+                  {/* 주최자 정보 */}
+                  <div className="mt-3 flex items-center gap-2">
+                    <img
+                      src={event.organizer.avatar}
+                      alt={event.organizer.name}
+                      className="h-6 w-6 rounded-full object-cover"
+                    />
+                    <span className="text-muted-foreground text-xs">
+                      {event.organizer.name}
+                    </span>
+                  </div>
                 </div>
               </Link>
             );

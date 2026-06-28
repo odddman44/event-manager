@@ -9,8 +9,8 @@ const defaultUrl = process.env.VERCEL_URL
 
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
-  title: "이벤트 매니저",
-  description: "이벤트를 만들고 참여자를 관리하세요",
+  title: "모이자",
+  description: "링크 하나로 이벤트를 만들고, 사람들을 모아보세요",
 };
 
 const geistSans = Geist({

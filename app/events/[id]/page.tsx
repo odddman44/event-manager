@@ -2,50 +2,64 @@ import { CalendarDays, MapPin, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import CopyLinkButton from "@/components/copy-link-button";
 
-// 더미 이벤트 데이터 (Phase 2: 하드코딩)
+// 더미 이벤트 데이터 (커버 이미지 + 주최자 아바타 포함)
 const DUMMY_EVENT = {
-  title: "팀 워크숍",
-  date: "2026-07-05T14:00",
-  location: "서울 강남구 COEX",
-  max: 20,
-  registered: 12,
+  id: "1",
+  title: "2025 개발자 네트워킹 밤",
+  coverImage: "https://picsum.photos/seed/developer/400/200",
+  description:
+    "서울의 개발자들이 모여 네트워킹하고 경험을 공유하는 자리입니다.",
+  event_date: "2025-10-21T15:36:00",
+  location: "강남구 테헤란로 152, 강남파이낸스센터",
+  max: 30,
+  registered: 8,
+  share_token: "DEV2025",
+  organizer: {
+    name: "김민준",
+    avatar: "https://api.dicebear.com/7.x/personas/svg?seed=minjun",
+  },
 };
 
-// 더미 참여자 데이터 (Phase 2: 하드코딩)
+// 더미 참여자 데이터 (아바타 + 역할 포함)
 const DUMMY_PARTICIPANTS = [
   {
-    name: "김철수",
-    memo: "30분 전 도착",
+    id: "1",
+    name: "김민준",
+    avatar: "https://api.dicebear.com/7.x/personas/svg?seed=minjun",
     status: "registered",
-    createdAt: "2026-06-28 10:30",
+    role: "host",
   },
   {
-    name: "이영희",
-    memo: "",
+    id: "2",
+    name: "강하윤",
+    avatar: "https://api.dicebear.com/7.x/personas/svg?seed=hayun",
     status: "registered",
-    createdAt: "2026-06-28 11:15",
+    role: "participant",
   },
   {
-    name: "박민수",
-    memo: "참여 확정",
+    id: "3",
+    name: "윤도현",
+    avatar: "https://api.dicebear.com/7.x/personas/svg?seed=dohyun",
     status: "registered",
-    createdAt: "2026-06-28 12:00",
+    role: "participant",
   },
   {
-    name: "최지현",
-    memo: "",
+    id: "4",
+    name: "임지민",
+    avatar: "https://api.dicebear.com/7.x/personas/svg?seed=jimin",
+    status: "registered",
+    role: "participant",
+  },
+  {
+    id: "5",
+    name: "한예준",
+    avatar: "https://api.dicebear.com/7.x/personas/svg?seed=yejun",
     status: "cancelled",
-    createdAt: "2026-06-28 13:20",
-  },
-  {
-    name: "정태양",
-    memo: "늦게 도착",
-    status: "registered",
-    createdAt: "2026-06-28 14:05",
+    role: "participant",
   },
 ];
 
-// 날짜 포맷: 2026년 7월 5일 오후 2:00
+// 날짜 포맷: 2025년 10월 21일 오후 3:36
 function formatDate(isoString: string): string {
   const date = new Date(isoString);
   const year = date.getFullYear();
@@ -63,42 +77,51 @@ export default function EventDetailPage() {
   const event = DUMMY_EVENT;
   const participants = DUMMY_PARTICIPANTS;
   const progressPercent = Math.round((event.registered / event.max) * 100);
-  const shareLink = "https://example.com/join/demo-token-123";
+  const shareLink = `https://moija.app/join/${event.share_token}`;
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       {/* a) 이벤트 정보 카드 */}
-      <div className="rounded-card bg-card border p-6 shadow-sm">
-        <h1 className="mb-4 text-2xl font-bold">{event.title}</h1>
+      <div className="rounded-card bg-card overflow-hidden border shadow-sm">
+        {/* 커버 이미지 */}
+        <img
+          src={event.coverImage}
+          alt={event.title}
+          className="h-48 w-full object-cover"
+        />
 
-        <div className="text-muted-foreground mb-4 space-y-2 text-sm">
-          <div className="flex items-center gap-2">
-            <CalendarDays className="text-brand h-4 w-4 shrink-0" />
-            <span>{formatDate(event.date)}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <MapPin className="text-brand h-4 w-4 shrink-0" />
-            <span>{event.location ?? "장소 미정"}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Users className="text-brand h-4 w-4 shrink-0" />
-            <span>정원 {event.max}명</span>
-          </div>
-        </div>
+        <div className="p-6">
+          <h1 className="mb-4 text-2xl font-bold">{event.title}</h1>
 
-        {/* 참여 인원 카운터 + 진행률 바 */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between text-sm">
-            <span className="font-medium">
-              {event.registered} / {event.max}명 참여 중
-            </span>
-            <span className="text-muted-foreground">{progressPercent}%</span>
+          <div className="text-muted-foreground mb-4 space-y-2 text-sm">
+            <div className="flex items-center gap-2">
+              <CalendarDays className="text-brand h-4 w-4 shrink-0" />
+              <span>{formatDate(event.event_date)}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <MapPin className="text-brand h-4 w-4 shrink-0" />
+              <span>{event.location ?? "장소 미정"}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Users className="text-brand h-4 w-4 shrink-0" />
+              <span>정원 {event.max}명</span>
+            </div>
           </div>
-          <div className="bg-muted h-2 w-full overflow-hidden rounded-full">
-            <div
-              className="bg-brand h-full rounded-full transition-all"
-              style={{ width: `${progressPercent}%` }}
-            />
+
+          {/* 참여 인원 카운터 + 진행률 바 */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span className="font-medium">
+                {event.registered} / {event.max}명 참여 중
+              </span>
+              <span className="text-muted-foreground">{progressPercent}%</span>
+            </div>
+            <div className="bg-muted h-2 w-full overflow-hidden rounded-full">
+              <div
+                className="bg-brand h-full rounded-full transition-all"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -117,7 +140,7 @@ export default function EventDetailPage() {
         </div>
       </div>
 
-      {/* c) 참여자 목록 테이블 */}
+      {/* c) 참여자 목록 — 리스트 형태 */}
       <div className="rounded-card bg-card border shadow-sm">
         <div className="border-b px-6 py-4">
           <h2 className="font-semibold">참여자 목록</h2>
@@ -127,56 +150,51 @@ export default function EventDetailPage() {
           </p>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-muted/50 border-b">
-                <th className="text-muted-foreground px-4 py-3 text-left font-medium">
-                  이름
-                </th>
-                <th className="text-muted-foreground px-4 py-3 text-left font-medium">
-                  메모
-                </th>
-                <th className="text-muted-foreground px-4 py-3 text-left font-medium">
-                  상태
-                </th>
-                <th className="text-muted-foreground px-4 py-3 text-left font-medium">
-                  신청 시각
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {participants.map((participant, index) => (
-                <tr
-                  key={index}
-                  className="hover:bg-muted/30 border-b last:border-0"
+        <ul className="divide-y">
+          {participants.map((participant) => (
+            <li
+              key={participant.id}
+              className="flex items-center gap-3 px-6 py-3"
+            >
+              {/* 아바타 이미지 */}
+              <img
+                src={participant.avatar}
+                alt={participant.name}
+                className="h-8 w-8 shrink-0 rounded-full object-cover"
+              />
+
+              {/* 이름 */}
+              <span className="flex-1 text-sm font-medium">
+                {participant.name}
+              </span>
+
+              {/* 역할 배지 */}
+              {participant.role === "host" ? (
+                <Badge className="bg-brand hover:bg-brand/80 border-transparent text-xs text-white">
+                  호스트
+                </Badge>
+              ) : (
+                <Badge variant="secondary" className="text-xs">
+                  참여자
+                </Badge>
+              )}
+
+              {/* 상태 배지 */}
+              {participant.status === "registered" ? (
+                <Badge className="border-green-200 bg-green-100 text-xs text-green-700 hover:bg-green-100">
+                  참여
+                </Badge>
+              ) : (
+                <Badge
+                  variant="secondary"
+                  className="border-gray-200 bg-gray-100 text-xs text-gray-500 hover:bg-gray-100"
                 >
-                  <td className="px-4 py-3 font-medium">{participant.name}</td>
-                  <td className="text-muted-foreground px-4 py-3">
-                    {participant.memo || "—"}
-                  </td>
-                  <td className="px-4 py-3">
-                    {participant.status === "registered" ? (
-                      <Badge className="border-green-200 bg-green-100 text-green-700 hover:bg-green-100">
-                        참여
-                      </Badge>
-                    ) : (
-                      <Badge
-                        variant="secondary"
-                        className="border-gray-200 bg-gray-100 text-gray-500 hover:bg-gray-100"
-                      >
-                        취소
-                      </Badge>
-                    )}
-                  </td>
-                  <td className="text-muted-foreground px-4 py-3">
-                    {participant.createdAt}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                  취소
+                </Badge>
+              )}
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );

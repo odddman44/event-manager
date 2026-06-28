@@ -1,22 +1,39 @@
 "use client";
 
-import { useState } from "react";
-import { CalendarDays, MapPin, Users } from "lucide-react";
+import { useState, Suspense } from "react";
+import {
+  CalendarDays,
+  MapPin,
+  Users,
+  Home,
+  Calendar,
+  PlusCircle,
+  User,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 // UI 상태 타입 정의
 type PageState = "form" | "completed" | "cancelled" | "full";
 
-// 더미 이벤트 데이터
+// 더미 이벤트 데이터 (커버 이미지 + 주최자 아바타 포함)
 const EVENT = {
-  title: "팀 워크숍",
-  date: "2026-07-05T14:00",
-  location: "서울 강남구 COEX",
-  max: 20,
-  registered: 12,
+  title: "2025 개발자 네트워킹 밤",
+  coverImage: "https://picsum.photos/seed/developer/400/200",
+  description:
+    "서울의 개발자들이 모여 네트워킹하고 경험을 공유하는 자리입니다. 다양한 분야의 개발자들을 만나보세요!",
+  event_date: "2025-10-21T15:36:00",
+  location: "강남구 테헤란로 152, 강남파이낸스센터",
+  current_participants: 8,
+  max_participants: 30,
+  organizer: {
+    name: "김민준",
+    avatar: "https://api.dicebear.com/7.x/personas/svg?seed=minjun",
+  },
 };
 
 // 날짜 포맷 변환 헬퍼
@@ -34,25 +51,80 @@ function formatDate(iso: string): string {
 // 이벤트 정보 카드 (모든 상태에서 공통 표시)
 function EventInfoCard() {
   return (
-    <div className="rounded-card space-y-3 border border-gray-100 bg-white p-4 shadow-sm">
-      <h1 className="text-xl font-bold text-gray-900">{EVENT.title}</h1>
-      <div className="space-y-2 text-sm text-gray-600">
-        <div className="flex items-center gap-2">
-          <CalendarDays className="text-brand size-4 shrink-0" />
-          <span>{formatDate(EVENT.date)}</span>
+    <div className="rounded-card overflow-hidden border border-gray-100 bg-white shadow-sm">
+      {/* 커버 이미지 */}
+      <img
+        src={EVENT.coverImage}
+        alt={EVENT.title}
+        className="h-40 w-full object-cover"
+      />
+
+      <div className="space-y-3 p-4">
+        <h1 className="text-xl font-bold text-gray-900">{EVENT.title}</h1>
+        <div className="space-y-2 text-sm text-gray-600">
+          <div className="flex items-center gap-2">
+            <CalendarDays className="text-brand size-4 shrink-0" />
+            <span>{formatDate(EVENT.event_date)}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <MapPin className="text-brand size-4 shrink-0" />
+            <span>{EVENT.location}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Users className="text-brand size-4 shrink-0" />
+            <span>
+              {EVENT.current_participants} / {EVENT.max_participants}명
+            </span>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <MapPin className="text-brand size-4 shrink-0" />
-          <span>{EVENT.location}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <Users className="text-brand size-4 shrink-0" />
-          <span>
-            {EVENT.registered} / {EVENT.max}명
-          </span>
+
+        {/* 주최자 정보 */}
+        <div className="flex items-center gap-2 border-t border-gray-100 pt-1">
+          <img
+            src={EVENT.organizer.avatar}
+            alt={EVENT.organizer.name}
+            className="h-8 w-8 rounded-full object-cover"
+          />
+          <div>
+            <p className="text-sm font-medium text-gray-800">
+              {EVENT.organizer.name}
+            </p>
+            <p className="text-xs text-gray-500">호스트</p>
+          </div>
         </div>
       </div>
     </div>
+  );
+}
+
+// 모바일 하단 네비게이션 아이템 정의
+const navItems = [
+  { href: "/", label: "홈", icon: Home },
+  { href: "/dashboard", label: "이벤트", icon: Calendar },
+  { href: "/events/new", label: "새 이벤트", icon: PlusCircle },
+  { href: "/profile", label: "프로필", icon: User },
+];
+
+// 인라인 하단 네비게이션 (join 페이지는 별도 레이아웃 없으므로 직접 포함)
+function BottomNavInline() {
+  const pathname = usePathname();
+  return (
+    <nav className="fixed right-0 bottom-0 left-0 z-50 flex h-16 items-center justify-around border-t border-gray-100 bg-white md:hidden">
+      {navItems.map(({ href, label, icon: Icon }) => {
+        const active =
+          pathname === href || (href !== "/" && pathname.startsWith(href));
+        return (
+          <Link
+            key={href}
+            href={href}
+            className={`flex flex-col items-center gap-0.5 text-xs ${active ? "text-brand" : "text-gray-500"}`}
+          >
+            <Icon className="h-5 w-5" />
+            <span>{label}</span>
+          </Link>
+        );
+      })}
+    </nav>
   );
 }
 
@@ -75,7 +147,7 @@ export default function JoinPage() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center bg-gray-50 px-4 py-6">
+    <main className="flex min-h-screen flex-col items-center bg-gray-50 px-4 py-6 pb-20">
       <div className="w-full max-w-sm space-y-4">
         {/* 공통: 이벤트 정보 카드 */}
         <EventInfoCard />
@@ -176,6 +248,11 @@ export default function JoinPage() {
           </div>
         )}
       </div>
+
+      {/* 모바일 하단 네비게이션 */}
+      <Suspense fallback={null}>
+        <BottomNavInline />
+      </Suspense>
     </main>
   );
 }

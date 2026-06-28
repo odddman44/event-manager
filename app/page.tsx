@@ -7,7 +7,7 @@ export default function Home() {
     <div className="flex min-h-screen flex-col">
       {/* 상단 헤더 */}
       <header className="flex items-center justify-between border-b px-6 py-4">
-        <span className="text-brand text-xl font-bold">이벤트 매니저</span>
+        <span className="text-brand text-xl font-bold">모이자</span>
         <Link href="/auth/login">
           <Button variant="outline" size="sm">
             로그인
@@ -20,13 +20,10 @@ export default function Home() {
         {/* 히어로 섹션 */}
         <section className="flex flex-col items-center justify-center px-6 py-20 text-center">
           <h1 className="text-3xl leading-tight font-bold tracking-tight sm:text-4xl">
-            이벤트 링크 하나로
-            <br />
-            참여자를 모으세요
+            모이자
           </h1>
           <p className="text-muted-foreground mt-4 max-w-sm">
-            주최자가 이벤트를 만들고 링크를 공유하면, 참여자는 회원가입 없이
-            즉시 참여 의사를 밝힐 수 있습니다.
+            링크 하나로 이벤트를 만들고, 사람들을 모아보세요
           </p>
           <div className="mt-8 flex gap-3">
             <Link href="/auth/sign-up">
@@ -79,7 +76,7 @@ export default function Home() {
 
       {/* 푸터 */}
       <footer className="text-muted-foreground border-t py-6 text-center text-sm">
-        © 2026 이벤트 매니저
+        © 2026 모이자
       </footer>
     </div>
   );

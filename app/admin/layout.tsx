@@ -14,7 +14,7 @@ export default function AdminLayout({
   return (
     <div className="bg-background flex min-h-screen">
       <aside className="flex w-56 flex-col gap-1 border-r p-4">
-        <div className="text-brand mb-4 font-bold">어드민</div>
+        <div className="text-brand mb-4 font-bold">Moija Admin</div>
         {navItems.map((item) => (
           <Link
             key={item.href}

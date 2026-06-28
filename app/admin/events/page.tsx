@@ -1,38 +1,42 @@
 import { AdminDeleteButton } from "@/components/admin-delete-button";
 
-// 더미 이벤트 데이터
+// 더미 이벤트 데이터 (커버 이미지 썸네일 포함)
 const events = [
   {
     id: "1",
-    title: "팀 워크숍",
-    organizer: "김관리",
-    date: "2026-07-05",
-    participants: 12,
-    created: "2026-06-20",
+    title: "2025 개발자 네트워킹 밤",
+    coverImage: "https://picsum.photos/seed/developer/80/60",
+    organizer: "김민준",
+    date: "2025-10-21",
+    participants: "8/30",
+    createdAt: "2025-10-01",
   },
   {
     id: "2",
-    title: "개발자 밋업",
-    organizer: "이주최",
-    date: "2026-07-12",
-    participants: 28,
-    created: "2026-06-21",
+    title: "UX/UI 디자인 워크샵",
+    coverImage: "https://picsum.photos/seed/design/80/60",
+    organizer: "강하윤",
+    date: "2025-10-26",
+    participants: "14/15",
+    createdAt: "2025-10-05",
   },
   {
     id: "3",
-    title: "독서 모임",
-    organizer: "박이벤",
-    date: "2026-07-20",
-    participants: 8,
-    created: "2026-06-22",
+    title: "테크 블로그 작성 챌린지",
+    coverImage: "https://picsum.photos/seed/blog/80/60",
+    organizer: "윤도현",
+    date: "2025-09-29",
+    participants: "20/20",
+    createdAt: "2025-09-20",
   },
   {
     id: "4",
-    title: "스터디 그룹",
-    organizer: "최스터",
-    date: "2026-07-25",
-    participants: 5,
-    created: "2026-06-23",
+    title: "웹 접근성 세미나",
+    coverImage: "https://picsum.photos/seed/seminar/80/60",
+    organizer: "임지민",
+    date: "2025-10-07",
+    participants: "3/10",
+    createdAt: "2025-09-25",
   },
 ];
 
@@ -66,7 +70,17 @@ export default function AdminEventsPage() {
                 key={event.id}
                 className="hover:bg-muted/20 border-b transition-colors last:border-0"
               >
-                <td className="px-4 py-3 font-medium">{event.title}</td>
+                {/* 썸네일 + 제목 */}
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={event.coverImage}
+                      alt={event.title}
+                      className="h-8 w-10 shrink-0 rounded object-cover"
+                    />
+                    <span className="font-medium">{event.title}</span>
+                  </div>
+                </td>
                 <td className="text-muted-foreground px-4 py-3">
                   {event.organizer}
                 </td>
@@ -74,10 +88,10 @@ export default function AdminEventsPage() {
                   {event.date}
                 </td>
                 <td className="px-4 py-3 text-right font-semibold">
-                  {event.participants}명
+                  {event.participants}
                 </td>
                 <td className="text-muted-foreground px-4 py-3">
-                  {event.created}
+                  {event.createdAt}
                 </td>
                 <td className="px-4 py-3 text-center">
                   <AdminDeleteButton label={event.title} />
