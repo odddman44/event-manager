@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 
 // 더미 이벤트 데이터 (Phase 2: 하드코딩)
 const DUMMY_EVENTS = [

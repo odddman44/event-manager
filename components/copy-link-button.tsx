@@ -9,10 +9,9 @@ interface CopyLinkButtonProps {
 export default function CopyLinkButton({ link }: CopyLinkButtonProps) {
   function handleCopy() {
     // Phase 2: 더미 알림 (실제 클립보드 복사는 Phase 7에서 구현)
-    alert("링크가 복사되었습니다.");
+    alert(`링크가 복사되었습니다:\n${link}`);
     // 실제 환경에서는 아래 코드 사용:
     // navigator.clipboard.writeText(link);
-    void link; // lint 경고 방지
   }
 
   return (
