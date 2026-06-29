@@ -156,7 +156,7 @@ export default function AdminUsersPage() {
                 </td>
                 <td className="px-4 py-3">
                   {user.role === "admin" ? (
-                    <Badge className="bg-brand hover:bg-brand/80 border-transparent text-white">
+                    <Badge className="bg-primary hover:bg-primary/80 border-transparent text-white">
                       관리자
                     </Badge>
                   ) : (

@@ -90,7 +90,7 @@ export default function DashboardPage() {
       {/* 페이지 헤더 */}
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold">내 이벤트</h1>
-        <Button asChild className="bg-brand hover:bg-brand/90 text-white">
+        <Button asChild className="bg-primary hover:bg-primary/90 text-white">
           <Link href="/events/new">새 이벤트 만들기</Link>
         </Button>
       </div>
@@ -103,7 +103,7 @@ export default function DashboardPage() {
           <p className="text-muted-foreground mb-6 text-sm">
             첫 이벤트를 만들어보세요!
           </p>
-          <Button asChild className="bg-brand hover:bg-brand/90 text-white">
+          <Button asChild className="bg-primary hover:bg-primary/90 text-white">
             <Link href="/events/new">이벤트 만들기</Link>
           </Button>
         </div>

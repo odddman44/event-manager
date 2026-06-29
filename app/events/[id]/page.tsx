@@ -95,15 +95,15 @@ export default function EventDetailPage() {
 
           <div className="text-muted-foreground mb-4 space-y-2 text-sm">
             <div className="flex items-center gap-2">
-              <CalendarDays className="text-brand h-4 w-4 shrink-0" />
+              <CalendarDays className="text-primary h-4 w-4 shrink-0" />
               <span>{formatDate(event.event_date)}</span>
             </div>
             <div className="flex items-center gap-2">
-              <MapPin className="text-brand h-4 w-4 shrink-0" />
+              <MapPin className="text-primary h-4 w-4 shrink-0" />
               <span>{event.location ?? "장소 미정"}</span>
             </div>
             <div className="flex items-center gap-2">
-              <Users className="text-brand h-4 w-4 shrink-0" />
+              <Users className="text-primary h-4 w-4 shrink-0" />
               <span>정원 {event.max}명</span>
             </div>
           </div>
@@ -118,7 +118,7 @@ export default function EventDetailPage() {
             </div>
             <div className="bg-muted h-2 w-full overflow-hidden rounded-full">
               <div
-                className="bg-brand h-full rounded-full transition-all"
+                className="bg-primary h-full rounded-full transition-all"
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
@@ -170,7 +170,7 @@ export default function EventDetailPage() {
 
               {/* 역할 배지 */}
               {participant.role === "host" ? (
-                <Badge className="bg-brand hover:bg-brand/80 border-transparent text-xs text-white">
+                <Badge className="bg-primary hover:bg-primary/80 border-transparent text-xs text-white">
                   호스트
                 </Badge>
               ) : (

@@ -44,7 +44,7 @@ export default function EventForm() {
       {/* 이벤트 제목 (필수) */}
       <div className="space-y-1.5">
         <Label htmlFor="title">
-          이벤트 제목 <span className="text-brand">*</span>
+          이벤트 제목 <span className="text-primary">*</span>
         </Label>
         <Input
           id="title"
@@ -59,7 +59,7 @@ export default function EventForm() {
       {/* 날짜 및 시간 (필수) */}
       <div className="space-y-1.5">
         <Label htmlFor="datetime">
-          날짜 및 시간 <span className="text-brand">*</span>
+          날짜 및 시간 <span className="text-primary">*</span>
         </Label>
         <Input
           id="datetime"
@@ -118,7 +118,7 @@ export default function EventForm() {
       <div className="flex gap-3 pt-2">
         <Button
           type="submit"
-          className="bg-brand hover:bg-brand/90 flex-1 text-white"
+          className="bg-primary hover:bg-primary/90 flex-1 text-white"
         >
           이벤트 만들기
         </Button>

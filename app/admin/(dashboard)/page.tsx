@@ -113,8 +113,8 @@ export default function AdminPage() {
             <Card key={label} className="rounded-card">
               <CardContent className="p-6">
                 <div className="mb-3 flex items-center gap-3">
-                  <div className="bg-brand/10 flex h-10 w-10 items-center justify-center rounded-full">
-                    <Icon className="text-brand h-5 w-5" />
+                  <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
+                    <Icon className="text-primary h-5 w-5" />
                   </div>
                   <p className="text-muted-foreground text-sm">{label}</p>
                 </div>

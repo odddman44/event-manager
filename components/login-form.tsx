@@ -81,7 +81,7 @@ export function LoginForm({
               {error && <p className="text-sm text-red-500">{error}</p>}
               <Button
                 type="submit"
-                className="bg-brand hover:bg-brand/90 w-full text-white"
+                className="bg-primary hover:bg-primary/90 w-full text-white"
                 disabled={isLoading}
               >
                 {isLoading ? "로그인 중..." : "로그인"}

@@ -26,7 +26,7 @@ export function BottomNav() {
             key={href}
             href={href}
             className={`flex flex-col items-center gap-0.5 text-xs ${
-              active ? "text-brand" : "text-gray-500"
+              active ? "text-primary" : "text-gray-500"
             }`}
           >
             <Icon className="h-5 w-5" />

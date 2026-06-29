@@ -98,7 +98,7 @@ export function SignUpForm({
               {error && <p className="text-sm text-red-500">{error}</p>}
               <Button
                 type="submit"
-                className="bg-brand hover:bg-brand/90 w-full text-white"
+                className="bg-primary hover:bg-primary/90 w-full text-white"
                 disabled={isLoading}
               >
                 {isLoading ? "가입 중..." : "회원가입"}

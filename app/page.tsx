@@ -8,7 +8,7 @@ export default function Home() {
     <div className="flex min-h-screen flex-col">
       {/* 상단 헤더 */}
       <header className="flex items-center justify-between border-b px-6 py-4">
-        <span className="text-brand text-xl font-bold">모이자</span>
+        <span className="text-primary text-xl font-bold">모이자</span>
         <div className="flex items-center gap-2">
           <ThemeSwitcher />
           <Link href="/auth/login">
@@ -31,7 +31,7 @@ export default function Home() {
           </p>
           <div className="mt-8 flex gap-3">
             <Link href="/auth/sign-up">
-              <Button className="bg-brand hover:bg-brand/90 text-white">
+              <Button className="bg-primary hover:bg-primary/90 text-white">
                 시작하기
               </Button>
             </Link>

@@ -63,15 +63,15 @@ function EventInfoCard() {
         <h1 className="text-xl font-bold text-gray-900">{EVENT.title}</h1>
         <div className="space-y-2 text-sm text-gray-600">
           <div className="flex items-center gap-2">
-            <CalendarDays className="text-brand size-4 shrink-0" />
+            <CalendarDays className="text-primary size-4 shrink-0" />
             <span>{formatDate(EVENT.event_date)}</span>
           </div>
           <div className="flex items-center gap-2">
-            <MapPin className="text-brand size-4 shrink-0" />
+            <MapPin className="text-primary size-4 shrink-0" />
             <span>{EVENT.location}</span>
           </div>
           <div className="flex items-center gap-2">
-            <Users className="text-brand size-4 shrink-0" />
+            <Users className="text-primary size-4 shrink-0" />
             <span>
               {EVENT.current_participants} / {EVENT.max_participants}명
             </span>
@@ -117,7 +117,7 @@ function BottomNavInline() {
           <Link
             key={href}
             href={href}
-            className={`flex flex-col items-center gap-0.5 text-xs ${active ? "text-brand" : "text-gray-500"}`}
+            className={`flex flex-col items-center gap-0.5 text-xs ${active ? "text-primary" : "text-gray-500"}`}
           >
             <Icon className="h-5 w-5" />
             <span>{label}</span>
@@ -158,7 +158,7 @@ export default function JoinPage() {
             <h2 className="font-semibold text-gray-800">참여 신청</h2>
             <div className="space-y-2">
               <Label htmlFor="name">
-                이름 <span className="text-brand">*</span>
+                이름 <span className="text-primary">*</span>
               </Label>
               <Input
                 id="name"
@@ -178,7 +178,7 @@ export default function JoinPage() {
               />
             </div>
             <Button
-              className="bg-brand hover:bg-brand/90 w-full text-white"
+              className="bg-primary hover:bg-primary/90 w-full text-white"
               onClick={handleJoin}
             >
               참여하기
@@ -224,7 +224,7 @@ export default function JoinPage() {
               참여가 취소되었습니다.
             </div>
             <Button
-              className="bg-brand hover:bg-brand/90 w-full text-white"
+              className="bg-primary hover:bg-primary/90 w-full text-white"
               onClick={() => {
                 setName("");
                 setMemo("");

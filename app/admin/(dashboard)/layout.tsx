@@ -17,7 +17,7 @@ export default function AdminDashboardLayout({
   return (
     <div className="bg-background flex min-h-screen">
       <aside className="flex w-56 flex-col border-r p-4">
-        <Link href="/admin" className="text-brand mb-4 block font-bold">
+        <Link href="/admin" className="text-primary mb-4 block font-bold">
           Moija Admin
         </Link>
         <div className="flex flex-1 flex-col gap-1">

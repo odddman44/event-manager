@@ -13,7 +13,7 @@ export default function DashboardLayout({
     <div className="bg-background min-h-screen">
       <header className="border-b">
         <div className="mx-auto flex h-14 max-w-4xl items-center justify-between px-4">
-          <Link href="/dashboard" className="text-brand font-bold">
+          <Link href="/dashboard" className="text-primary font-bold">
             모이자
           </Link>
           <nav className="flex items-center gap-4 text-sm">
