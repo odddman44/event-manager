@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+import { Oxanium, Source_Code_Pro } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
 
@@ -13,8 +13,14 @@ export const metadata: Metadata = {
   description: "링크 하나로 이벤트를 만들고, 사람들을 모아보세요",
 };
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const oxanium = Oxanium({
+  variable: "--font-sans",
+  display: "swap",
+  subsets: ["latin"],
+});
+
+const sourceCodePro = Source_Code_Pro({
+  variable: "--font-mono",
   display: "swap",
   subsets: ["latin"],
 });
@@ -26,7 +32,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.className} antialiased`}>
+      <body
+        className={`${oxanium.variable} ${sourceCodePro.variable} font-sans antialiased`}
+      >
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
