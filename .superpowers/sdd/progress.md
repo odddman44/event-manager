@@ -36,3 +36,17 @@ Base commit: d773406
 | 014    | 전체 사용자 관리 (F008)                         | pending  | -                           |
 | 015    | 전체 E2E 통합 테스트                            | pending  | -                           |
 | 016    | Vercel 배포                                     | pending  | -                           |
+
+## Phase 3 Tasks (2026-07-01-phase3-auth.md)
+
+| Task | Description                         | Status   | Commits          |
+| ---- | ----------------------------------- | -------- | ---------------- |
+| P3-1 | middleware (proxy.ts) 접근 제어     | complete | d6a9738..4cecf55 |
+| P3-2 | 로그인/콜백 role 분기 리다이렉트    | complete | 4cecf55..4e250ad |
+| P3-3 | 어드민 로그인 실제 연동             | complete | 4e250ad..0791829 |
+| P3-4 | 회원가입 emailRedirectTo + 로그아웃 | complete | 0791829..3e99a3d |
+| P3-5 | Playwright 테스트 업데이트          | complete | 3e99a3d..6c24f1a |
+
+### Minor findings to address in final review
+
+- lib/supabase/proxy.ts의 updateSession()이 dead code가 됨 (P3-1 이후)
