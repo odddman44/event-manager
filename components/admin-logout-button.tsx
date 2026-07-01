@@ -1,10 +1,16 @@
 "use client";
 
+import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 export function AdminLogoutButton() {
-  const handleLogout = () => {
-    alert("로그아웃 기능은 준비 중입니다.");
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/");
   };
 
   return (

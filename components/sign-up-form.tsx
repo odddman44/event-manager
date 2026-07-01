@@ -39,7 +39,7 @@ export function SignUpForm({
         password,
         options: {
           data: { full_name: fullName },
-          emailRedirectTo: `${window.location.origin}/protected`,
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
       if (error) throw error;
