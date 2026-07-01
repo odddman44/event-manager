@@ -6,20 +6,48 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ThemeSwitcher } from "@/components/theme-switcher";
+import { createClient } from "@/lib/supabase/client";
 
 export default function AdminLoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    const supabase = createClient();
     setLoading(true);
-    // Phase 3에서 실제 관리자 인증으로 교체
-    setTimeout(() => {
+    setError(null);
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) throw error;
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", data.user.id)
+        .single();
+
+      if (profile?.role !== "admin") {
+        await supabase.auth.signOut();
+        setError("관리자 권한이 없습니다");
+        return;
+      }
+
       router.push("/admin");
-    }, 800);
+    } catch (error: unknown) {
+      setError(
+        error instanceof Error ? error.message : "로그인 오류가 발생했습니다",
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -103,6 +131,7 @@ export default function AdminLoginPage() {
                 required
               />
             </div>
+            {error && <p className="text-destructive text-sm">{error}</p>}
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "로그인 중..." : "로그인"}
             </Button>
