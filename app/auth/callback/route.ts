@@ -8,13 +8,19 @@ export async function GET(request: NextRequest) {
 
   if (code) {
     const supabase = await createClient();
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) {
-      redirect("/protected");
+    if (!error && data.user) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", data.user.id)
+        .single();
+
+      redirect(profile?.role === "admin" ? "/admin" : "/dashboard");
     }
 
-    redirect(`/auth/error?error=${error.message}`);
+    redirect(`/auth/error?error=${error?.message ?? "Unknown error"}`);
   }
 
   redirect(`/auth/error?error=No code provided`);
