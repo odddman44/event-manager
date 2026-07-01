@@ -82,8 +82,8 @@ test.describe("관리자 로그인 /admin/login", () => {
 
   test("로그인 후 어드민 대시보드로 이동한다", async ({ page }) => {
     await page.goto("/admin/login");
-    await page.getByLabel("이메일").fill("admin@moija.com");
-    await page.getByLabel("비밀번호").fill("password123");
+    await page.getByLabel("이메일").fill(process.env.TEST_ADMIN_EMAIL!);
+    await page.getByLabel("비밀번호").fill(process.env.TEST_ADMIN_PASSWORD!);
     await page.getByRole("button", { name: "로그인" }).click();
     await expect(page).toHaveURL("/admin", { timeout: 5000 });
   });
@@ -101,6 +101,8 @@ test.describe("관리자 로그인 /admin/login", () => {
 // 어드민 대시보드 /admin
 // ──────────────────────────────────────────────
 test.describe("어드민 대시보드 /admin", () => {
+  test.use({ storageState: "tests/.auth/admin.json" });
+
   test("사이드바에 4개 메뉴가 있다", async ({ page }) => {
     await page.goto("/admin");
     await expect(page.getByRole("link", { name: "대시보드" })).toBeVisible();
@@ -127,6 +129,8 @@ test.describe("어드민 대시보드 /admin", () => {
 // 어드민 이벤트 관리 /admin/events
 // ──────────────────────────────────────────────
 test.describe("어드민 이벤트 관리 /admin/events", () => {
+  test.use({ storageState: "tests/.auth/admin.json" });
+
   test("이벤트 테이블과 삭제 버튼이 표시된다", async ({ page }) => {
     await page.goto("/admin/events");
     await expect(page.getByText("이벤트 관리")).toBeVisible();
@@ -141,6 +145,8 @@ test.describe("어드민 이벤트 관리 /admin/events", () => {
 // 어드민 사용자 관리 /admin/users
 // ──────────────────────────────────────────────
 test.describe("어드민 사용자 관리 /admin/users", () => {
+  test.use({ storageState: "tests/.auth/admin.json" });
+
   test("10명 사용자가 표시된다", async ({ page }) => {
     await page.goto("/admin/users");
     await expect(page.getByText("사용자 관리")).toBeVisible();
@@ -153,6 +159,8 @@ test.describe("어드민 사용자 관리 /admin/users", () => {
 // 통계 분석 /admin/stats
 // ──────────────────────────────────────────────
 test.describe("어드민 통계 분석 /admin/stats", () => {
+  test.use({ storageState: "tests/.auth/admin.json" });
+
   test("4개 차트 제목이 표시된다", async ({ page }) => {
     await page.goto("/admin/stats");
     await expect(page.getByText("이벤트 생성 추이")).toBeVisible();
@@ -166,6 +174,8 @@ test.describe("어드민 통계 분석 /admin/stats", () => {
 // 주최자 대시보드 /dashboard
 // ──────────────────────────────────────────────
 test.describe("주최자 대시보드 /dashboard", () => {
+  test.use({ storageState: "tests/.auth/user.json" });
+
   test("모이자 헤더와 이벤트 카드가 표시된다", async ({ page }) => {
     await page.goto("/dashboard");
     await expect(page.locator("header").getByText("모이자")).toBeVisible();
@@ -191,6 +201,8 @@ test.describe("주최자 대시보드 /dashboard", () => {
 // 이벤트 관리 /events/1
 // ──────────────────────────────────────────────
 test.describe("이벤트 관리 /events/1", () => {
+  test.use({ storageState: "tests/.auth/user.json" });
+
   test("이벤트 정보와 공유 코드가 표시된다", async ({ page }) => {
     await page.goto("/events/1");
     await expect(page.getByText("2025 개발자 네트워킹 밤")).toBeVisible();

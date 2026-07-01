@@ -7,6 +7,7 @@ export default defineConfig({
   retries: 0,
   workers: 1,
   reporter: "line",
+  globalSetup: "./tests/global-setup.ts",
   use: {
     baseURL: "http://localhost:3000",
     trace: "on-first-retry",
