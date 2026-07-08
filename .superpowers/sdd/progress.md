@@ -50,3 +50,9 @@ Base commit: d773406
 ### Minor findings to address in final review
 
 - lib/supabase/proxy.ts의 updateSession()이 dead code가 됨 (P3-1 이후)
+
+## Phase 3 완료 (2026-07-01)
+
+- dead code: lib/supabase/proxy.ts 삭제 → 14a554f
+- ROADMAP 업데이트 → 42fdd6b
+- 다음: Phase 4 Task 007 (이벤트 생성 기능 연결)
