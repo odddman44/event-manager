@@ -4,18 +4,17 @@ import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
 import { listEventsByOrganizer } from "@/src/services/event-service";
 
-// 날짜 포맷: 2025년 10월 21일 오후 3:36
+// 날짜 포맷: 2025년 10월 21일 오후 3:36 (서버 실행 위치와 무관하게 KST 고정)
 function formatDate(isoString: string): string {
-  const date = new Date(isoString);
-  const year = date.getFullYear();
-  const month = date.getMonth() + 1;
-  const day = date.getDate();
-  const hour = date.getHours();
-  const minute = date.getMinutes();
-  const ampm = hour < 12 ? "오전" : "오후";
-  const hour12 = hour % 12 === 0 ? 12 : hour % 12;
-  const minuteStr = minute === 0 ? "00" : String(minute).padStart(2, "0");
-  return `${year}년 ${month}월 ${day}일 ${ampm} ${hour12}:${minuteStr}`;
+  return new Date(isoString).toLocaleString("ko-KR", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
 }
 
 // 참여 현황에 따라 뱃지 색상 결정 (정원 없으면 항상 모집 중)

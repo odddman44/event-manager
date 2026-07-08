@@ -6,17 +6,16 @@ import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
 import { getDashboardData } from "@/src/services/admin-service";
 
-// 날짜 포맷 헬퍼
+// 날짜 포맷 헬퍼 (서버 실행 위치와 무관하게 KST 고정)
 function formatDate(isoString: string): string {
-  const date = new Date(isoString);
-  const month = date.getMonth() + 1;
-  const day = date.getDate();
-  const hour = date.getHours();
-  const minute = date.getMinutes();
-  const ampm = hour < 12 ? "오전" : "오후";
-  const hour12 = hour % 12 === 0 ? 12 : hour % 12;
-  const minuteStr = minute === 0 ? "00" : String(minute).padStart(2, "0");
-  return `${month}월 ${day}일 ${ampm} ${hour12}:${minuteStr}`;
+  return new Date(isoString).toLocaleString("ko-KR", {
+    timeZone: "Asia/Seoul",
+    month: "long",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
 }
 
 async function AdminDashboardContent() {

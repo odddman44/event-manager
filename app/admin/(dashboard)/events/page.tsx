@@ -5,7 +5,9 @@ import { listAllEvents } from "@/src/services/admin-service";
 import { deleteEventAction } from "@/src/controllers/admin-controller";
 
 function formatDate(isoString: string): string {
-  return new Date(isoString).toLocaleDateString("ko-KR");
+  return new Date(isoString).toLocaleDateString("ko-KR", {
+    timeZone: "Asia/Seoul",
+  });
 }
 
 async function AdminEventsContent() {

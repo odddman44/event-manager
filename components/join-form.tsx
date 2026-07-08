@@ -31,10 +31,12 @@ function guestTokenKey(shareToken: string): string {
   return `moija_guest_token_${shareToken}`;
 }
 
-// 날짜 포맷 변환 헬퍼
+// 날짜 포맷 변환 헬퍼 (서버 렌더링과 클라이언트 하이드레이션이 항상 동일한 값을
+// 내도록 실행 환경 타임존과 무관하게 KST로 고정)
 function formatDate(iso: string): string {
   const d = new Date(iso);
   return d.toLocaleString("ko-KR", {
+    timeZone: "Asia/Seoul",
     year: "numeric",
     month: "long",
     day: "numeric",
