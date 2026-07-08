@@ -37,7 +37,14 @@ export const joinEventSchema = z.object({
   memo: z.string().max(200, "메모는 200자 이하여야 합니다").optional(),
 });
 
+export const updateParticipantMemoSchema = z.object({
+  memo: z.string().max(200, "메모는 200자 이하여야 합니다").optional(),
+});
+
 export type SignInInput = z.infer<typeof signInSchema>;
 export type SignUpInput = z.infer<typeof signUpSchema>;
 export type CreateEventInput = z.infer<typeof createEventSchema>;
 export type JoinEventInput = z.infer<typeof joinEventSchema>;
+export type UpdateParticipantMemoInput = z.infer<
+  typeof updateParticipantMemoSchema
+>;
