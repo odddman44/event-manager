@@ -1,23 +1,42 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
 interface AdminDeleteButtonProps {
-  // 삭제 대상 이름 (확인 메시지에 활용 가능)
+  // 삭제 대상 이름 (확인 메시지에 활용)
   label: string;
+  onDelete: () => Promise<{ success: boolean; error?: string }>;
 }
 
-export function AdminDeleteButton({ label }: AdminDeleteButtonProps) {
-  const handleDelete = () => {
+export function AdminDeleteButton({ label, onDelete }: AdminDeleteButtonProps) {
+  const [isDeleting, setIsDeleting] = useState(false);
+  const router = useRouter();
+
+  async function handleDelete() {
     const confirmed = window.confirm(`${label}을(를) 삭제하시겠습니까?`);
-    if (confirmed) {
-      alert("삭제 기능은 준비 중입니다.");
+    if (!confirmed) return;
+
+    setIsDeleting(true);
+    const result = await onDelete();
+    setIsDeleting(false);
+
+    if (!result.success) {
+      alert(result.error ?? "삭제에 실패했습니다.");
+      return;
     }
-  };
+    router.refresh();
+  }
 
   return (
-    <Button variant="destructive" size="sm" onClick={handleDelete}>
-      삭제
+    <Button
+      variant="destructive"
+      size="sm"
+      onClick={handleDelete}
+      disabled={isDeleting}
+    >
+      {isDeleting ? "삭제 중..." : "삭제"}
     </Button>
   );
 }

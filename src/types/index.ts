@@ -82,3 +82,12 @@ export interface EventWithParticipantCount extends Event {
 export interface EventWithOrganizer extends Event {
   organizer: Pick<Profile, "id" | "full_name" | "email">;
 }
+
+export interface AdminEventSummary extends Event {
+  organizer_name: string;
+  participant_count: number;
+}
+
+export interface AdminUserSummary extends Profile {
+  created_events_count: number;
+}
