@@ -20,6 +20,7 @@ export interface Event {
   event_date: string;
   location: string | null;
   max_participants: number | null;
+  cover_image_url: string | null;
   share_token: string;
   created_at: string;
 }
@@ -42,6 +43,7 @@ export interface CreateEventDto {
   event_date: string;
   location?: string;
   max_participants?: number;
+  cover_image_url?: string;
 }
 
 export interface UpdateEventDto {
@@ -50,6 +52,7 @@ export interface UpdateEventDto {
   event_date?: string;
   location?: string;
   max_participants?: number;
+  cover_image_url?: string;
 }
 
 export interface CreateParticipantDto {

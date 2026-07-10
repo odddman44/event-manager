@@ -41,6 +41,21 @@ export const updateParticipantMemoSchema = z.object({
   memo: z.string().max(200, "메모는 200자 이하여야 합니다").optional(),
 });
 
+const MAX_COVER_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+const ALLOWED_COVER_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
+// <input type="file">는 FileList를 다뤄 zodResolver와 궁합이 안 좋아 별도 함수로 분리
+// (클라이언트 즉시 피드백 + 서버 재검증 양쪽에서 재사용)
+export function validateCoverImage(file: File): string | null {
+  if (!ALLOWED_COVER_IMAGE_TYPES.includes(file.type)) {
+    return "JPG, PNG, WebP 형식의 이미지만 업로드할 수 있습니다.";
+  }
+  if (file.size > MAX_COVER_IMAGE_SIZE) {
+    return "이미지 크기는 5MB 이하여야 합니다.";
+  }
+  return null;
+}
+
 export type SignInInput = z.infer<typeof signInSchema>;
 export type SignUpInput = z.infer<typeof signUpSchema>;
 export type CreateEventInput = z.infer<typeof createEventSchema>;

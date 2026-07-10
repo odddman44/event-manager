@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       events: {
         Row: {
+          cover_image_url: string | null;
           created_at: string;
           description: string | null;
           event_date: string;
@@ -27,6 +28,7 @@ export type Database = {
           title: string;
         };
         Insert: {
+          cover_image_url?: string | null;
           created_at?: string;
           description?: string | null;
           event_date: string;
@@ -38,6 +40,7 @@ export type Database = {
           title: string;
         };
         Update: {
+          cover_image_url?: string | null;
           created_at?: string;
           description?: string | null;
           event_date?: string;
@@ -131,7 +134,7 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      is_admin: { Args: never; Returns: boolean };
     };
     Enums: {
       participant_status: "registered" | "cancelled";

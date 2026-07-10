@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "../../lib/supabase/database.types";
 import type {
   CreateEventDto,
+  UpdateEventDto,
   Event,
   EventWithParticipantCount,
   Participant,
@@ -21,6 +22,7 @@ export async function createEvent(
       event_date: dto.event_date,
       location: dto.location ?? null,
       max_participants: dto.max_participants ?? null,
+      cover_image_url: dto.cover_image_url ?? null,
       // share_token은 DB 기본값이 자동 생성
     })
     .select()
@@ -30,6 +32,26 @@ export async function createEvent(
     throw new Error(error?.message ?? "이벤트 생성에 실패했습니다.");
   }
   return data;
+}
+
+export async function uploadCoverImage(
+  supabase: SupabaseClient<Database>,
+  organizerId: string,
+  file: File,
+): Promise<string> {
+  const ext = file.name.split(".").pop() ?? "jpg";
+  const path = `${organizerId}/${crypto.randomUUID()}.${ext}`;
+
+  const { error } = await supabase.storage
+    .from("event-covers")
+    .upload(path, file);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  const { data } = supabase.storage.from("event-covers").getPublicUrl(path);
+  return data.publicUrl;
 }
 
 export async function listEventsByOrganizer(
@@ -132,4 +154,35 @@ export async function listParticipantsByEvent(
     throw new Error(error.message);
   }
   return data ?? [];
+}
+
+export async function updateEvent(
+  supabase: SupabaseClient<Database>,
+  eventId: string,
+  dto: UpdateEventDto,
+): Promise<Event> {
+  const { data, error } = await supabase
+    .from("events")
+    .update({
+      ...(dto.title !== undefined && { title: dto.title }),
+      ...(dto.description !== undefined && {
+        description: dto.description ?? null,
+      }),
+      ...(dto.event_date !== undefined && { event_date: dto.event_date }),
+      ...(dto.location !== undefined && { location: dto.location ?? null }),
+      ...(dto.max_participants !== undefined && {
+        max_participants: dto.max_participants ?? null,
+      }),
+      ...(dto.cover_image_url !== undefined && {
+        cover_image_url: dto.cover_image_url ?? null,
+      }),
+    })
+    .eq("id", eventId)
+    .select()
+    .single();
+
+  if (error || !data) {
+    throw new Error(error?.message ?? "이벤트 수정에 실패했습니다.");
+  }
+  return data;
 }

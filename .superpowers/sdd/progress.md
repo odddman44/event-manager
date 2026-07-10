@@ -56,3 +56,42 @@ Base commit: d773406
 - dead code: lib/supabase/proxy.ts 삭제 → 14a554f
 - ROADMAP 업데이트 → 42fdd6b
 - 다음: Phase 4 Task 007 (이벤트 생성 기능 연결)
+
+## Plan: 2026-07-10-event-cover-image-and-edit.md
+
+Started: 2026-07-10
+Worktree branch: worktree-event-cover-image-and-edit
+Base commit: 8c8ca044619ca5ce7390a9363149d1ab48a1cb4b
+
+| Task | Description                                | Status   | Commits          |
+| ---- | ------------------------------------------ | -------- | ---------------- |
+| 1    | DB 스키마 & Storage 버킷 준비              | complete | 8c8ca04..5f3d8e6 |
+| 2    | 타입 및 검증 함수 확장                     | complete | 2f3f014..105db33 |
+| 3    | Repository 확장 (업로드/수정)              | complete | 93ac7d4..384e311 |
+| 4    | Service 확장                               | complete | 0012cd5..18ab106 |
+| 5    | Controller 확장                            | complete | 9b70e40..70d58a9 |
+| 6    | 기본 커버 이미지 + 이미지 도메인 설정      | complete | 69b9685..1de4277 |
+| 7    | EventForm 리팩터링                         | complete | 82eabd5..9e9efd6 |
+| 8    | 이벤트 수정 페이지 + 관리 페이지 수정 버튼 | complete | 28e16d2..375071f |
+| 9    | 커버 이미지 노출 3곳                       | complete | 1aa586f..81c4339 |
+| 10   | 통합 검증 (Playwright MCP)                 | complete | af932bd..3b1bba6 |
+
+### Note
+
+`.superpowers/sdd/progress.md` is a tracked file in this repo (from an
+earlier session, before the self-ignoring workspace convention). Implementer
+subagents may see it as "unexpectedly modified" and revert it via
+`git checkout`. The controller re-verifies/re-appends this section after
+each task's implementer run, before dispatching the reviewer.
+
+### 최종 전체 브랜치 리뷰 (2026-07-10)
+
+- 리뷰어: opus, 범위 8c8ca04..b3e7bdf (22 commits)
+- Critical: next.config.ts에 Server Action bodySizeLimit 미설정 → 기본 1MB 제한으로 1~5MB
+  정상 이미지가 413 실패. `experimental.serverActions.bodySizeLimit: "6mb"`로 수정 (context7로
+  Next.js 16 설정 키 확인 후 반영).
+- Important: event-form.tsx onSubmit이 액션 reject(네트워크/413 등)를 처리 못해 무응답 실패 →
+  try/catch + 에러 메시지 추가.
+- 수정 커밋: 74619cf. ~2.9MB PNG로 실제 브라우저 업로드→생성까지 재현해 수정 확인.
+- Minor 3건(확장자 fallback 데드코드, 하드코딩된 supabase 호스트, 무관한 is_admin 타입 변경)은
+  기존 컨벤션과 일치하거나 스코프 밖으로 판단해 보류.

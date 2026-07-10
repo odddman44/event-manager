@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import {
   CalendarDays,
   MapPin,
@@ -55,6 +56,14 @@ function EventInfoCard({
 }) {
   return (
     <div className="rounded-card overflow-hidden border border-gray-100 bg-white shadow-sm">
+      <div className="relative h-40 w-full bg-gray-100">
+        <Image
+          src={event.cover_image_url ?? "/images/default-event-cover.svg"}
+          alt={event.title}
+          fill
+          className="object-cover"
+        />
+      </div>
       <div className="space-y-3 p-4">
         <h1 className="text-xl font-bold text-gray-900">{event.title}</h1>
         <div className="space-y-2 text-sm text-gray-600">
