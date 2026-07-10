@@ -56,3 +56,30 @@ Base commit: d773406
 - dead code: lib/supabase/proxy.ts 삭제 → 14a554f
 - ROADMAP 업데이트 → 42fdd6b
 - 다음: Phase 4 Task 007 (이벤트 생성 기능 연결)
+
+## Plan: 2026-07-10-event-cover-image-and-edit.md
+
+Started: 2026-07-10
+Worktree branch: worktree-event-cover-image-and-edit
+Base commit: 8c8ca044619ca5ce7390a9363149d1ab48a1cb4b
+
+| Task | Description                                | Status   | Commits          |
+| ---- | ------------------------------------------ | -------- | ---------------- |
+| 1    | DB 스키마 & Storage 버킷 준비              | complete | 8c8ca04..5f3d8e6 |
+| 2    | 타입 및 검증 함수 확장                     | pending  | -                |
+| 3    | Repository 확장 (업로드/수정)              | pending  | -                |
+| 4    | Service 확장                               | pending  | -                |
+| 5    | Controller 확장                            | pending  | -                |
+| 6    | 기본 커버 이미지 + 이미지 도메인 설정      | pending  | -                |
+| 7    | EventForm 리팩터링                         | pending  | -                |
+| 8    | 이벤트 수정 페이지 + 관리 페이지 수정 버튼 | pending  | -                |
+| 9    | 커버 이미지 노출 3곳                       | pending  | -                |
+| 10   | 통합 검증 (Playwright MCP)                 | pending  | -                |
+
+### Note
+
+`.superpowers/sdd/progress.md` is a tracked file in this repo (from an
+earlier session, before the self-ignoring workspace convention). Implementer
+subagents may see it as "unexpectedly modified" and revert it via
+`git checkout`. The controller re-verifies/re-appends this section after
+each task's implementer run, before dispatching the reviewer.
