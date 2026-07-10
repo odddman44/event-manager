@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import Image from "next/image";
 import { CalendarDays, MapPin, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -57,6 +58,14 @@ async function EventDetailContent({
     <div className="mx-auto max-w-2xl space-y-6">
       {/* a) 이벤트 정보 카드 */}
       <div className="rounded-card bg-card overflow-hidden border p-6 shadow-sm">
+        <div className="bg-muted relative -mx-6 -mt-6 mb-4 h-40 w-[calc(100%+3rem)]">
+          <Image
+            src={event.cover_image_url ?? "/images/default-event-cover.svg"}
+            alt={event.title}
+            fill
+            className="object-cover"
+          />
+        </div>
         <div className="mb-4 flex items-start justify-between gap-3">
           <h1 className="text-2xl font-bold">{event.title}</h1>
           <Button asChild variant="outline" size="sm" className="shrink-0">

@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
 import { listEventsByOrganizer } from "@/src/services/event-service";
@@ -79,6 +80,15 @@ async function EventList() {
             href={`/events/${event.id}`}
             className="rounded-card bg-card block overflow-hidden border p-5 shadow-sm transition-shadow hover:shadow-md"
           >
+            <div className="bg-muted relative mb-3 h-32 w-full overflow-hidden rounded-md">
+              <Image
+                src={event.cover_image_url ?? "/images/default-event-cover.svg"}
+                alt={event.title}
+                fill
+                className="object-cover"
+              />
+            </div>
+
             <div className="mb-3 flex items-start justify-between gap-2">
               <h2 className="text-lg font-bold">{event.title}</h2>
               <span
