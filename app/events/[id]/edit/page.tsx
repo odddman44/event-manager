@@ -1,9 +1,10 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import EventForm from "@/components/event-form";
 import { createClient } from "@/lib/supabase/server";
 import { getEventDetail } from "@/src/services/event-service";
 
-export default async function EditEventPage({
+async function EditEventContent({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -38,5 +39,17 @@ export default async function EditEventPage({
         />
       </div>
     </div>
+  );
+}
+
+export default function EditEventPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  return (
+    <Suspense>
+      <EditEventContent params={params} />
+    </Suspense>
   );
 }
