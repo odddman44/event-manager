@@ -3,6 +3,8 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { CalendarDays, MapPin, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 import CopyLinkButton from "@/components/copy-link-button";
 import { createClient } from "@/lib/supabase/server";
 import { getEventDetail } from "@/src/services/event-service";
@@ -55,7 +57,12 @@ async function EventDetailContent({
     <div className="mx-auto max-w-2xl space-y-6">
       {/* a) 이벤트 정보 카드 */}
       <div className="rounded-card bg-card overflow-hidden border p-6 shadow-sm">
-        <h1 className="mb-4 text-2xl font-bold">{event.title}</h1>
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <h1 className="text-2xl font-bold">{event.title}</h1>
+          <Button asChild variant="outline" size="sm" className="shrink-0">
+            <Link href={`/events/${event.id}/edit`}>수정</Link>
+          </Button>
+        </div>
 
         <div className="text-muted-foreground mb-4 space-y-2 text-sm">
           <div className="flex items-center gap-2">
