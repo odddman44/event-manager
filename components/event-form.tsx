@@ -117,15 +117,26 @@ export default function EventForm({
       event_date: new Date(data.event_date).toISOString(),
     };
 
-    const result =
-      mode === "edit" && eventId
-        ? await updateEventAction(eventId, payload, coverImageFile ?? undefined)
-        : await createEventAction(payload, coverImageFile ?? undefined);
+    try {
+      const result =
+        mode === "edit" && eventId
+          ? await updateEventAction(
+              eventId,
+              payload,
+              coverImageFile ?? undefined,
+            )
+          : await createEventAction(payload, coverImageFile ?? undefined);
 
-    if (result?.success === false) {
-      setServerError(result.error);
+      if (result?.success === false) {
+        setServerError(result.error);
+      }
+      // 성공 시 서버 액션 내부 redirect()가 네비게이션을 처리
+    } catch {
+      // 413(바디 크기 초과) 등 네트워크/전송 단계 실패는 result가 아니라 예외로 옴
+      setServerError(
+        "요청 처리 중 오류가 발생했습니다. 이미지 용량을 줄이고 다시 시도해주세요.",
+      );
     }
-    // 성공 시 서버 액션 내부 redirect()가 네비게이션을 처리
   }
 
   return (
