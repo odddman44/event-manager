@@ -72,7 +72,7 @@ Base commit: 8c8ca044619ca5ce7390a9363149d1ab48a1cb4b
 | 5    | Controller 확장                            | complete | 9b70e40..70d58a9 |
 | 6    | 기본 커버 이미지 + 이미지 도메인 설정      | complete | 69b9685..1de4277 |
 | 7    | EventForm 리팩터링                         | complete | 82eabd5..9e9efd6 |
-| 8    | 이벤트 수정 페이지 + 관리 페이지 수정 버튼 | pending  | -                |
+| 8    | 이벤트 수정 페이지 + 관리 페이지 수정 버튼 | complete | 28e16d2..375071f |
 | 9    | 커버 이미지 노출 3곳                       | pending  | -                |
 | 10   | 통합 검증 (Playwright MCP)                 | pending  | -                |
 
