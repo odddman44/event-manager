@@ -70,7 +70,7 @@ Base commit: 8c8ca044619ca5ce7390a9363149d1ab48a1cb4b
 | 3    | Repository 확장 (업로드/수정)              | complete | 93ac7d4..384e311 |
 | 4    | Service 확장                               | complete | 0012cd5..18ab106 |
 | 5    | Controller 확장                            | complete | 9b70e40..70d58a9 |
-| 6    | 기본 커버 이미지 + 이미지 도메인 설정      | pending  | -                |
+| 6    | 기본 커버 이미지 + 이미지 도메인 설정      | complete | 69b9685..1de4277 |
 | 7    | EventForm 리팩터링                         | pending  | -                |
 | 8    | 이벤트 수정 페이지 + 관리 페이지 수정 버튼 | pending  | -                |
 | 9    | 커버 이미지 노출 3곳                       | pending  | -                |
