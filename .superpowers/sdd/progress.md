@@ -67,7 +67,7 @@ Base commit: 8c8ca044619ca5ce7390a9363149d1ab48a1cb4b
 | ---- | ------------------------------------------ | -------- | ---------------- |
 | 1    | DB 스키마 & Storage 버킷 준비              | complete | 8c8ca04..5f3d8e6 |
 | 2    | 타입 및 검증 함수 확장                     | complete | 2f3f014..105db33 |
-| 3    | Repository 확장 (업로드/수정)              | pending  | -                |
+| 3    | Repository 확장 (업로드/수정)              | complete | 93ac7d4..384e311 |
 | 4    | Service 확장                               | pending  | -                |
 | 5    | Controller 확장                            | pending  | -                |
 | 6    | 기본 커버 이미지 + 이미지 도메인 설정      | pending  | -                |
