@@ -83,3 +83,15 @@ earlier session, before the self-ignoring workspace convention). Implementer
 subagents may see it as "unexpectedly modified" and revert it via
 `git checkout`. The controller re-verifies/re-appends this section after
 each task's implementer run, before dispatching the reviewer.
+
+### 최종 전체 브랜치 리뷰 (2026-07-10)
+
+- 리뷰어: opus, 범위 8c8ca04..b3e7bdf (22 commits)
+- Critical: next.config.ts에 Server Action bodySizeLimit 미설정 → 기본 1MB 제한으로 1~5MB
+  정상 이미지가 413 실패. `experimental.serverActions.bodySizeLimit: "6mb"`로 수정 (context7로
+  Next.js 16 설정 키 확인 후 반영).
+- Important: event-form.tsx onSubmit이 액션 reject(네트워크/413 등)를 처리 못해 무응답 실패 →
+  try/catch + 에러 메시지 추가.
+- 수정 커밋: 74619cf. ~2.9MB PNG로 실제 브라우저 업로드→생성까지 재현해 수정 확인.
+- Minor 3건(확장자 fallback 데드코드, 하드코딩된 supabase 호스트, 무관한 is_admin 타입 변경)은
+  기존 컨벤션과 일치하거나 스코프 밖으로 판단해 보류.
