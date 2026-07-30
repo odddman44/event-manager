@@ -2,26 +2,17 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import {
-  CalendarDays,
-  MapPin,
-  Users,
-  Home,
-  Calendar,
-  PlusCircle,
-  User,
-} from "lucide-react";
+import { CalendarDays, MapPin, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import {
   joinEventAction,
   getParticipantByGuestTokenAction,
   updateParticipantMemoAction,
   cancelParticipationAction,
+  reactivateParticipationAction,
 } from "@/src/controllers/participant-controller";
 import type { Event } from "@/src/types";
 
@@ -95,37 +86,6 @@ function EventInfoCard({
   );
 }
 
-// 모바일 하단 네비게이션 아이템 정의
-const navItems = [
-  { href: "/", label: "홈", icon: Home },
-  { href: "/dashboard", label: "이벤트", icon: Calendar },
-  { href: "/events/new", label: "새 이벤트", icon: PlusCircle },
-  { href: "/profile", label: "프로필", icon: User },
-];
-
-// 인라인 하단 네비게이션 (join 페이지는 별도 레이아웃 없으므로 직접 포함)
-function BottomNavInline() {
-  const pathname = usePathname();
-  return (
-    <nav className="fixed right-0 bottom-0 left-0 z-50 flex h-16 items-center justify-around border-t border-gray-100 bg-white md:hidden">
-      {navItems.map(({ href, label, icon: Icon }) => {
-        const active =
-          pathname === href || (href !== "/" && pathname.startsWith(href));
-        return (
-          <Link
-            key={href}
-            href={href}
-            className={`flex flex-col items-center gap-0.5 text-xs ${active ? "text-primary" : "text-gray-500"}`}
-          >
-            <Icon className="h-5 w-5" />
-            <span>{label}</span>
-          </Link>
-        );
-      })}
-    </nav>
-  );
-}
-
 interface JoinFormProps {
   shareToken: string;
   event: Event;
@@ -141,6 +101,10 @@ export default function JoinForm({
 }: JoinFormProps) {
   const [state, setState] = useState<PageState>(isFull ? "full" : "form");
   const [guestToken, setGuestToken] = useState<string | null>(null);
+  // 참여/취소 후 서버가 돌려준 최신 인원수로 갱신 (초기값은 서버 렌더 시점 값)
+  const [count, setCount] = useState(registeredCount);
+  // 완료 문구는 방금 신청/재참여한 경우에만 노출 (재방문 시에는 부적절)
+  const [justJoined, setJustJoined] = useState(false);
 
   // 신규 참여 폼 입력값
   const [name, setName] = useState("");
@@ -196,6 +160,8 @@ export default function JoinForm({
     setGuestToken(result.guestToken);
     setSavedName(result.name);
     setEditMemo(memo);
+    setCount(result.registeredCount);
+    setJustJoined(true);
     setState("completed");
   }
 
@@ -222,14 +188,32 @@ export default function JoinForm({
       setError(result.error);
       return;
     }
+    setCount(result.registeredCount);
+    setJustJoined(false);
     setState("cancelled");
   }
 
+  // 취소했던 참여를 되살린다 (guest_token 유지 — 새 레코드를 만들지 않는다)
+  async function handleReactivate() {
+    if (!guestToken) return;
+    setIsSubmitting(true);
+    setError(null);
+    const result = await reactivateParticipationAction(guestToken);
+    setIsSubmitting(false);
+    if (!result.success) {
+      setError(result.error);
+      return;
+    }
+    setCount(result.registeredCount);
+    setJustJoined(true);
+    setState("completed");
+  }
+
   return (
-    <main className="flex min-h-screen flex-col items-center bg-gray-50 px-4 py-6 pb-20">
+    <main className="flex min-h-screen flex-col items-center bg-gray-50 px-4 py-6 pb-6">
       <div className="w-full max-w-sm space-y-4">
         {/* 공통: 이벤트 정보 카드 */}
-        <EventInfoCard event={event} registeredCount={registeredCount} />
+        <EventInfoCard event={event} registeredCount={count} />
 
         {/* State 1: 신규 참여 폼 */}
         {state === "form" && (
@@ -270,9 +254,11 @@ export default function JoinForm({
         {/* State 2: 참여 완료 상태 */}
         {state === "completed" && (
           <div className="rounded-card space-y-4 border border-gray-100 bg-white p-4 shadow-sm">
-            <div className="rounded-card border border-green-200 bg-green-50 px-3 py-2 text-sm font-medium text-green-700">
-              ✅ 참여 신청이 완료되었습니다!
-            </div>
+            {justJoined && (
+              <div className="rounded-card border border-green-200 bg-green-50 px-3 py-2 text-sm font-medium text-green-700">
+                ✅ 참여 신청이 완료되었습니다!
+              </div>
+            )}
             <p className="text-gray-800">
               안녕하세요, <span className="font-bold">{savedName}</span>님!
             </p>
@@ -311,17 +297,13 @@ export default function JoinForm({
             <div className="rounded-card border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-600">
               참여가 취소되었습니다.
             </div>
+            {error && <p className="text-sm text-red-500">{error}</p>}
             <Button
               className="bg-primary hover:bg-primary/90 w-full text-white"
-              onClick={() => {
-                localStorage.removeItem(guestTokenKey(shareToken));
-                setGuestToken(null);
-                setName("");
-                setMemo("");
-                setState("form");
-              }}
+              onClick={handleReactivate}
+              disabled={isSubmitting}
             >
-              다시 참여하기
+              {isSubmitting ? "처리 중..." : "다시 참여하기"}
             </Button>
           </div>
         )}
@@ -338,9 +320,6 @@ export default function JoinForm({
           </div>
         )}
       </div>
-
-      {/* 모바일 하단 네비게이션 */}
-      <BottomNavInline />
     </main>
   );
 }
