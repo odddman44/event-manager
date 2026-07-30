@@ -83,6 +83,19 @@ export async function deleteEvent(
   return deleteEventRepository(supabase, eventId);
 }
 
+// 주최자 본인이 아니면 에러 (getEventDetail/updateEvent와 동일한 소유자 검증 패턴)
+export async function deleteEventByOrganizer(
+  supabase: SupabaseClient<Database>,
+  eventId: string,
+  organizerId: string,
+): Promise<void> {
+  const event = await getEventByIdRepository(supabase, eventId);
+  if (!event || event.organizer_id !== organizerId) {
+    throw new Error("이벤트를 찾을 수 없습니다.");
+  }
+  return deleteEventRepository(supabase, eventId);
+}
+
 // 주최자 본인이 아니면 에러 (getEventDetail과 동일한 소유자 검증 패턴)
 export async function updateEvent(
   supabase: SupabaseClient<Database>,

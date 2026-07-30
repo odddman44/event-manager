@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import CopyLinkButton from "@/components/copy-link-button";
+import { EventDeleteButton } from "@/components/event-delete-button";
 import { createClient } from "@/lib/supabase/server";
 import { getEventDetail } from "@/src/services/event-service";
 
@@ -68,9 +69,12 @@ async function EventDetailContent({
         </div>
         <div className="mb-4 flex items-start justify-between gap-3">
           <h1 className="text-2xl font-bold">{event.title}</h1>
-          <Button asChild variant="outline" size="sm" className="shrink-0">
-            <Link href={`/events/${event.id}/edit`}>수정</Link>
-          </Button>
+          <div className="flex shrink-0 items-center gap-1">
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/events/${event.id}/edit`}>수정</Link>
+            </Button>
+            <EventDeleteButton eventId={event.id} eventTitle={event.title} />
+          </div>
         </div>
 
         <div className="text-muted-foreground mb-4 space-y-2 text-sm">

@@ -6,6 +6,7 @@ import { createEventSchema, type CreateEventInput } from "../lib/validations";
 import {
   createEvent as createEventService,
   updateEvent as updateEventService,
+  deleteEventByOrganizer as deleteEventByOrganizerService,
 } from "../services/event-service";
 
 type EventActionResult = { success: false; error: string };
@@ -89,4 +90,29 @@ export async function updateEventAction(
   }
 
   redirect(`/events/${eventId}`);
+}
+
+export async function deleteEventAction(
+  eventId: string,
+): Promise<EventActionResult | void> {
+  const supabase = await createClient();
+  const { data } = await supabase.auth.getClaims();
+  const organizerId = data?.claims?.sub;
+  if (!organizerId) {
+    return { success: false, error: "로그인이 필요합니다." };
+  }
+
+  try {
+    await deleteEventByOrganizerService(supabase, eventId, organizerId);
+  } catch (err) {
+    return {
+      success: false,
+      error:
+        err instanceof Error
+          ? err.message
+          : "이벤트 삭제 중 오류가 발생했습니다.",
+    };
+  }
+
+  redirect("/dashboard");
 }
