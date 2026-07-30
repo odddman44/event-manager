@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { GoogleLoginButton } from "@/components/google-login-button";
 
 export function LoginForm({
   className,
@@ -61,6 +62,17 @@ export function LoginForm({
           <CardDescription>이메일과 비밀번호로 로그인하세요</CardDescription>
         </CardHeader>
         <CardContent>
+          <div className="mb-6 flex flex-col gap-6">
+            <GoogleLoginButton />
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="border-border w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-card text-muted-foreground px-2">또는</span>
+              </div>
+            </div>
+          </div>
           <form onSubmit={handleLogin}>
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
@@ -75,7 +87,15 @@ export function LoginForm({
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="password">비밀번호</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">비밀번호</Label>
+                  <Link
+                    href="/auth/forgot-password"
+                    className="text-muted-foreground text-xs underline underline-offset-4"
+                  >
+                    비밀번호를 잊으셨나요?
+                  </Link>
+                </div>
                 <Input
                   id="password"
                   type="password"

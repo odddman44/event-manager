@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { GoogleLoginButton } from "@/components/google-login-button";
 
 export function SignUpForm({
   className,
@@ -59,6 +60,17 @@ export function SignUpForm({
           <CardDescription>계정을 만들고 이벤트를 시작하세요</CardDescription>
         </CardHeader>
         <CardContent>
+          <div className="mb-6 flex flex-col gap-6">
+            <GoogleLoginButton />
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="border-border w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-card text-muted-foreground px-2">또는</span>
+              </div>
+            </div>
+          </div>
           <form onSubmit={handleSignUp}>
             <div className="flex flex-col gap-6">
               {/* 이름 필드 */}
