@@ -93,3 +93,20 @@ export async function cancelParticipation(
   }
   return data;
 }
+
+export async function reactivateParticipation(
+  guestToken: string,
+): Promise<Participant> {
+  const adminClient = createAdminClient();
+  const { data, error } = await adminClient
+    .from("participants")
+    .update({ status: "registered" })
+    .eq("guest_token", guestToken)
+    .select()
+    .single();
+
+  if (error || !data) {
+    throw new Error(error?.message ?? "재참여에 실패했습니다.");
+  }
+  return data;
+}

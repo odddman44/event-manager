@@ -11,6 +11,7 @@ import {
   getParticipantByGuestToken as getParticipantByGuestTokenService,
   updateParticipantMemo as updateParticipantMemoService,
   cancelParticipation as cancelParticipationService,
+  reactivateParticipation as reactivateParticipationService,
 } from "../services/participant-service";
 import type { ParticipantStatus } from "../types";
 
@@ -117,6 +118,21 @@ export async function cancelParticipationAction(
     return {
       success: false,
       error: err instanceof Error ? err.message : "참여 취소에 실패했습니다.",
+    };
+  }
+}
+
+export async function reactivateParticipationAction(
+  guestToken: string,
+): Promise<ActionResult> {
+  const supabase = await createClient();
+  try {
+    await reactivateParticipationService(supabase, guestToken);
+    return { success: true };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "재참여에 실패했습니다.",
     };
   }
 }
