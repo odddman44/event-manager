@@ -12,11 +12,17 @@ import {
   updateParticipantMemo as updateParticipantMemoService,
   cancelParticipation as cancelParticipationService,
   reactivateParticipation as reactivateParticipationService,
+  countRegisteredByEventId as countRegisteredByEventIdService,
 } from "../services/participant-service";
 import type { ParticipantStatus } from "../types";
 
 type JoinEventResult =
-  | { success: true; guestToken: string; name: string }
+  | {
+      success: true;
+      guestToken: string;
+      name: string;
+      registeredCount: number;
+    }
   | { success: false; error: string };
 
 export async function joinEventAction(
@@ -38,10 +44,15 @@ export async function joinEventAction(
       shareToken,
       parsed.data,
     );
+    const registeredCount = await countRegisteredByEventIdService(
+      supabase,
+      participant.event_id,
+    );
     return {
       success: true,
       guestToken: participant.guest_token,
       name: participant.name,
+      registeredCount,
     };
   } catch (err) {
     return {
@@ -85,6 +96,10 @@ export async function getParticipantByGuestTokenAction(
 
 type ActionResult = { success: true } | { success: false; error: string };
 
+type CountedActionResult =
+  | { success: true; registeredCount: number }
+  | { success: false; error: string };
+
 export async function updateParticipantMemoAction(
   guestToken: string,
   memo: string,
@@ -110,10 +125,15 @@ export async function updateParticipantMemoAction(
 
 export async function cancelParticipationAction(
   guestToken: string,
-): Promise<ActionResult> {
+): Promise<CountedActionResult> {
+  const supabase = await createClient();
   try {
-    await cancelParticipationService(guestToken);
-    return { success: true };
+    const participant = await cancelParticipationService(guestToken);
+    const registeredCount = await countRegisteredByEventIdService(
+      supabase,
+      participant.event_id,
+    );
+    return { success: true, registeredCount };
   } catch (err) {
     return {
       success: false,
@@ -124,11 +144,18 @@ export async function cancelParticipationAction(
 
 export async function reactivateParticipationAction(
   guestToken: string,
-): Promise<ActionResult> {
+): Promise<CountedActionResult> {
   const supabase = await createClient();
   try {
-    await reactivateParticipationService(supabase, guestToken);
-    return { success: true };
+    const participant = await reactivateParticipationService(
+      supabase,
+      guestToken,
+    );
+    const registeredCount = await countRegisteredByEventIdService(
+      supabase,
+      participant.event_id,
+    );
+    return { success: true, registeredCount };
   } catch (err) {
     return {
       success: false,

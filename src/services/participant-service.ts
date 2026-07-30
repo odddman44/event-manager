@@ -121,3 +121,10 @@ export async function reactivateParticipation(
 
   return reactivateParticipationRepository(guestToken);
 }
+
+export async function countRegisteredByEventId(
+  supabase: SupabaseClient<Database>,
+  eventId: string,
+): Promise<number> {
+  return countRegisteredParticipantsRepository(supabase, eventId);
+}
