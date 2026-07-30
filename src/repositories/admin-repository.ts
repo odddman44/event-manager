@@ -26,9 +26,11 @@ export async function countUsers(
 export async function countParticipants(
   supabase: SupabaseClient<Database>,
 ): Promise<number> {
+  // 취소한 참여자는 제외 — 이벤트 목록의 participant_count와 기준을 맞춘다
   const { count, error } = await supabase
     .from("participants")
-    .select("*", { count: "exact", head: true });
+    .select("*", { count: "exact", head: true })
+    .eq("status", "registered");
   if (error) throw new Error(error.message);
   return count ?? 0;
 }
