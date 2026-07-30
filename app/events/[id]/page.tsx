@@ -97,6 +97,12 @@ async function EventDetailContent({
           </div>
         </div>
 
+        {event.description && (
+          <p className="mb-4 text-sm whitespace-pre-wrap">
+            {event.description}
+          </p>
+        )}
+
         {/* 참여 인원 카운터 + 진행률 바 */}
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">

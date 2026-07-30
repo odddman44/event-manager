@@ -85,6 +85,11 @@ function EventInfoCard({
             </span>
           </div>
         </div>
+        {event.description && (
+          <p className="text-sm whitespace-pre-wrap text-gray-600">
+            {event.description}
+          </p>
+        )}
       </div>
     </div>
   );
