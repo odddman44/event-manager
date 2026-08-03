@@ -1,4 +1,21 @@
+import { Suspense } from "react";
 import { StatsCharts } from "@/components/stats-charts";
+import { createClient } from "@/lib/supabase/server";
+import { getStatsData } from "@/src/services/admin-service";
+
+async function StatsContent() {
+  const supabase = await createClient();
+  const data = await getStatsData(supabase);
+
+  return (
+    <StatsCharts
+      eventTrend={data.eventTrend}
+      userTrend={data.userTrend}
+      statusDistribution={data.statusDistribution}
+      topEvents={data.topEvents}
+    />
+  );
+}
 
 export default function AdminStatsPage() {
   return (
@@ -10,7 +27,9 @@ export default function AdminStatsPage() {
         </p>
       </div>
 
-      <StatsCharts />
+      <Suspense>
+        <StatsContent />
+      </Suspense>
     </div>
   );
 }

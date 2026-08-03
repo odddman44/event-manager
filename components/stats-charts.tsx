@@ -17,69 +17,24 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import type { StatsData } from "@/src/services/admin-service";
 
-// 이벤트 생성 추이 (9/16 ~ 10/14)
-const eventTrendData = [
-  { date: "9/16", count: 2 },
-  { date: "9/18", count: 3 },
-  { date: "9/20", count: 1 },
-  { date: "9/22", count: 3 },
-  { date: "9/24", count: 2 },
-  { date: "9/26", count: 2 },
-  { date: "9/28", count: 1 },
-  { date: "9/30", count: 2 },
-  { date: "10/2", count: 3 },
-  { date: "10/4", count: 2 },
-  { date: "10/6", count: 2 },
-  { date: "10/8", count: 1 },
-  { date: "10/10", count: 3 },
-  { date: "10/12", count: 2 },
-  { date: "10/14", count: 3 },
-];
+// 상태 분포 파이차트 색상 (예정 / 진행 중 / 종료 순서 — getEventStatusDistribution의 반환 순서와 일치)
+const STATUS_COLORS = ["#111827", "#6b7280", "#d1d5db"];
 
-// 사용자 가입 추이
-const userTrendData = [
-  { date: "9/16", count: 2 },
-  { date: "9/18", count: 3 },
-  { date: "9/20", count: 1 },
-  { date: "9/22", count: 2 },
-  { date: "9/24", count: 3 },
-  { date: "9/26", count: 1 },
-  { date: "9/28", count: 2 },
-  { date: "9/30", count: 1 },
-  { date: "10/2", count: 3 },
-  { date: "10/4", count: 2 },
-  { date: "10/6", count: 1 },
-  { date: "10/8", count: 2 },
-  { date: "10/10", count: 3 },
-  { date: "10/12", count: 1 },
-  { date: "10/14", count: 2 },
-];
-
-// 이벤트 상태 분포
-const statusData = [
-  { name: "예정", value: 10, color: "#111827" },
-  { name: "진행 중", value: 5, color: "#6b7280" },
-  { name: "종료", value: 5, color: "#d1d5db" },
-];
-
-// 인기 이벤트 TOP 5
-const topEventsData = [
-  { name: "AI/ML 해커톤 2025", participants: 24 },
-  { name: "개발자 네트워킹 밤", participants: 20 },
-  { name: "풀스택 부트캠프", participants: 16 },
-  { name: "백엔드 컨퍼런스", participants: 12 },
-  { name: "UX/UI 워크샵", participants: 10 },
-];
-
-export function StatsCharts() {
+export function StatsCharts({
+  eventTrend,
+  userTrend,
+  statusDistribution,
+  topEvents,
+}: StatsData) {
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
       {/* 이벤트 생성 추이 */}
       <div className="rounded-card bg-card border p-6 shadow-sm">
         <h2 className="mb-4 font-semibold">이벤트 생성 추이</h2>
         <ResponsiveContainer width="100%" height={280}>
-          <LineChart data={eventTrendData}>
+          <LineChart data={eventTrend}>
             <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
             <XAxis
               dataKey="date"
@@ -112,7 +67,7 @@ export function StatsCharts() {
         <ResponsiveContainer width="100%" height={280}>
           <PieChart>
             <Pie
-              data={statusData}
+              data={statusDistribution}
               cx="50%"
               cy="45%"
               outerRadius={100}
@@ -120,8 +75,11 @@ export function StatsCharts() {
               label={({ value }) => value}
               labelLine={false}
             >
-              {statusData.map((entry, index) => (
-                <Cell key={index} fill={entry.color} />
+              {statusDistribution.map((entry, index) => (
+                <Cell
+                  key={entry.name}
+                  fill={STATUS_COLORS[index % STATUS_COLORS.length]}
+                />
               ))}
             </Pie>
             <Legend
@@ -143,7 +101,7 @@ export function StatsCharts() {
       <div className="rounded-card bg-card border p-6 shadow-sm">
         <h2 className="mb-4 font-semibold">사용자 가입 추이</h2>
         <ResponsiveContainer width="100%" height={280}>
-          <AreaChart data={userTrendData}>
+          <AreaChart data={userTrend}>
             <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
             <XAxis
               dataKey="date"
@@ -169,7 +127,7 @@ export function StatsCharts() {
         <h2 className="mb-4 font-semibold">인기 이벤트 TOP 5</h2>
         <ResponsiveContainer width="100%" height={280}>
           <BarChart
-            data={topEventsData}
+            data={topEvents}
             layout="vertical"
             margin={{ left: 8, right: 16 }}
           >

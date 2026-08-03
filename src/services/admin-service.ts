@@ -10,6 +10,13 @@ import {
   listRecentUsers as listRecentUsersRepository,
   listUsersWithEventCounts as listUsersWithEventCountsRepository,
   deleteUser as deleteUserRepository,
+  getEventCreationTrend as getEventCreationTrendRepository,
+  getUserSignUpTrend as getUserSignUpTrendRepository,
+  getEventStatusDistribution as getEventStatusDistributionRepository,
+  getTopEventsByParticipants as getTopEventsByParticipantsRepository,
+  type TrendPoint,
+  type StatusSlice,
+  type TopEvent,
 } from "../repositories/admin-repository";
 
 export interface DashboardStats {
@@ -65,4 +72,28 @@ export async function listAllUsers(
 
 export async function deleteUser(userId: string): Promise<void> {
   return deleteUserRepository(userId);
+}
+
+export interface StatsData {
+  eventTrend: TrendPoint[];
+  userTrend: TrendPoint[];
+  statusDistribution: StatusSlice[];
+  topEvents: TopEvent[];
+}
+
+const STATS_TREND_DAYS = 30;
+const STATS_TOP_EVENTS_LIMIT = 5;
+
+export async function getStatsData(
+  supabase: SupabaseClient<Database>,
+): Promise<StatsData> {
+  const [eventTrend, userTrend, statusDistribution, topEvents] =
+    await Promise.all([
+      getEventCreationTrendRepository(supabase, STATS_TREND_DAYS),
+      getUserSignUpTrendRepository(supabase, STATS_TREND_DAYS),
+      getEventStatusDistributionRepository(supabase),
+      getTopEventsByParticipantsRepository(supabase, STATS_TOP_EVENTS_LIMIT),
+    ]);
+
+  return { eventTrend, userTrend, statusDistribution, topEvents };
 }
