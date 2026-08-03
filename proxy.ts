@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 import type { Database } from "@/lib/supabase/database.types";
 
-const GUEST_ONLY_PATHS = ["/auth/login", "/auth/sign-up", "/admin/login"];
+const GUEST_ONLY_PATHS = ["/", "/auth/login", "/auth/sign-up", "/admin/login"];
 const USER_PROTECTED_PREFIXES = ["/dashboard", "/events", "/profile"];
 
 async function getRole(
