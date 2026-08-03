@@ -12,7 +12,7 @@ export default defineConfig({
   reporter: "line",
   globalSetup: "./tests/global-setup.ts",
   use: {
-    baseURL: "http://localhost:3000",
+    baseURL: "http://localhost:3001",
     trace: "on-first-retry",
     actionTimeout: 10000,
     navigationTimeout: 15000,
@@ -28,7 +28,7 @@ export default defineConfig({
   ],
   webServer: {
     command: "npm run dev",
-    url: "http://localhost:3000",
+    url: "http://localhost:3001",
     reuseExistingServer: true,
     timeout: 60000,
     stdout: "ignore",
