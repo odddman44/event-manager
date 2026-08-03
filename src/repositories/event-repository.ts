@@ -186,3 +186,66 @@ export async function updateEvent(
   }
   return data;
 }
+
+// 내가 참여한(등록 상태) 이벤트. 본인이 주최한 이벤트는 "내가 만든 이벤트"와 중복되므로 제외한다.
+export async function listEventsByParticipantUserId(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+): Promise<EventWithParticipantCount[]> {
+  const { data: myParticipations, error: participationError } = await supabase
+    .from("participants")
+    .select("event_id")
+    .eq("user_id", userId)
+    .eq("status", "registered");
+
+  if (participationError) {
+    throw new Error(participationError.message);
+  }
+
+  const eventIds = [
+    ...new Set((myParticipations ?? []).map((row) => row.event_id)),
+  ];
+  if (eventIds.length === 0) {
+    return [];
+  }
+
+  const { data: events, error } = await supabase
+    .from("events")
+    .select("*")
+    .in("id", eventIds)
+    .neq("organizer_id", userId)
+    .order("event_date", { ascending: true });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+  if (!events || events.length === 0) {
+    return [];
+  }
+
+  const { data: participants, error: participantsError } = await supabase
+    .from("participants")
+    .select("event_id")
+    .eq("status", "registered")
+    .in(
+      "event_id",
+      events.map((event) => event.id),
+    );
+
+  if (participantsError) {
+    throw new Error(participantsError.message);
+  }
+
+  const countByEventId = new Map<string, number>();
+  for (const participant of participants ?? []) {
+    countByEventId.set(
+      participant.event_id,
+      (countByEventId.get(participant.event_id) ?? 0) + 1,
+    );
+  }
+
+  return events.map((event) => ({
+    ...event,
+    participant_count: countByEventId.get(event.id) ?? 0,
+  }));
+}

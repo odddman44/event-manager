@@ -11,6 +11,7 @@ import {
   getEventById as getEventByIdRepository,
   listParticipantsByEvent as listParticipantsByEventRepository,
   deleteEvent as deleteEventRepository,
+  listEventsByParticipantUserId as listEventsByParticipantUserIdRepository,
 } from "../repositories/event-repository";
 
 function emptyToUndefined(value?: string): string | undefined {
@@ -130,4 +131,11 @@ export async function updateEvent(
     max_participants: input.max_participants,
     cover_image_url: coverImageUrl,
   });
+}
+
+export async function listParticipatedEvents(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+): Promise<EventWithParticipantCount[]> {
+  return listEventsByParticipantUserIdRepository(supabase, userId);
 }
