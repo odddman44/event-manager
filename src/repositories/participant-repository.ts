@@ -23,6 +23,7 @@ export async function createParticipant(
   supabase: SupabaseClient<Database>,
   eventId: string,
   dto: CreateParticipantDto,
+  userId?: string | null,
 ): Promise<Participant> {
   const { data, error } = await supabase
     .from("participants")
@@ -30,6 +31,7 @@ export async function createParticipant(
       event_id: eventId,
       name: dto.name,
       memo: dto.memo ?? null,
+      user_id: userId ?? null,
       // guest_token은 DB 기본값이 자동 생성
     })
     .select()

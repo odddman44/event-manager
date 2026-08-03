@@ -48,6 +48,7 @@ export async function joinEvent(
   supabase: SupabaseClient<Database>,
   shareToken: string,
   dto: CreateParticipantDto,
+  userId?: string | null,
 ): Promise<Participant> {
   const event = await getEventByShareTokenRepository(supabase, shareToken);
   if (!event) {
@@ -64,10 +65,15 @@ export async function joinEvent(
     }
   }
 
-  return createParticipantRepository(supabase, event.id, {
-    name: dto.name,
-    memo: emptyToUndefined(dto.memo),
-  });
+  return createParticipantRepository(
+    supabase,
+    event.id,
+    {
+      name: dto.name,
+      memo: emptyToUndefined(dto.memo),
+    },
+    userId,
+  );
 }
 
 export async function getParticipantByGuestToken(

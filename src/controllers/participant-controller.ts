@@ -38,11 +38,15 @@ export async function joinEventAction(
   }
 
   const supabase = await createClient();
+  // 로그인 상태면 참여를 계정에 연결한다 (비로그인이면 null — 기존 guest_token 흐름 그대로)
+  const { data: claims } = await supabase.auth.getClaims();
+  const userId = claims?.claims?.sub ?? null;
   try {
     const participant = await joinEventService(
       supabase,
       shareToken,
       parsed.data,
+      userId,
     );
     const registeredCount = await countRegisteredByEventIdService(
       supabase,
