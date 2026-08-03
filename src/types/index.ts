@@ -28,6 +28,7 @@ export interface Event {
 export interface Participant {
   id: string;
   event_id: string;
+  user_id: string | null;
   name: string;
   memo: string | null;
   guest_token: string;

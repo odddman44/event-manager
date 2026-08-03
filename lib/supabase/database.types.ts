@@ -70,6 +70,7 @@ export type Database = {
           memo: string | null;
           name: string;
           status: Database["public"]["Enums"]["participant_status"];
+          user_id: string | null;
         };
         Insert: {
           created_at?: string;
@@ -79,6 +80,7 @@ export type Database = {
           memo?: string | null;
           name: string;
           status?: Database["public"]["Enums"]["participant_status"];
+          user_id?: string | null;
         };
         Update: {
           created_at?: string;
@@ -88,6 +90,7 @@ export type Database = {
           memo?: string | null;
           name?: string;
           status?: Database["public"]["Enums"]["participant_status"];
+          user_id?: string | null;
         };
         Relationships: [
           {
