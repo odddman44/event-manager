@@ -2,11 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Calendar, PlusCircle, User } from "lucide-react";
+import { Calendar, PlusCircle, User } from "lucide-react";
 
 // 하단 네비게이션 아이템 정의
 const navItems = [
-  { href: "/", label: "홈", icon: Home },
   { href: "/dashboard", label: "이벤트", icon: Calendar },
   { href: "/events/new", label: "새 이벤트", icon: PlusCircle },
   { href: "/profile", label: "프로필", icon: User },
