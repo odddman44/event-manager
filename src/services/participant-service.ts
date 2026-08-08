@@ -1,6 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "../../lib/supabase/database.types";
-import type { CreateParticipantDto, Event, Participant } from "../types";
+import type {
+  CreateParticipantDto,
+  Event,
+  Participant,
+  ParticipantStatus,
+} from "../types";
 import {
   getEventByShareToken as getEventByShareTokenRepository,
   getEventById as getEventByIdRepository,
@@ -23,11 +28,18 @@ export interface JoinPageData {
   event: Event;
   registeredCount: number;
   isFull: boolean;
+  existingParticipant: {
+    guestToken: string;
+    name: string;
+    memo: string | null;
+    status: ParticipantStatus;
+  } | null;
 }
 
 export async function getJoinPageData(
   supabase: SupabaseClient<Database>,
   shareToken: string,
+  userId?: string | null,
 ): Promise<JoinPageData | null> {
   const event = await getEventByShareTokenRepository(supabase, shareToken);
   if (!event) {
@@ -42,7 +54,24 @@ export async function getJoinPageData(
     event.max_participants !== null &&
     registeredCount >= event.max_participants;
 
-  return { event, registeredCount, isFull };
+  let existingParticipant: JoinPageData["existingParticipant"] = null;
+  if (userId) {
+    const participant = await getParticipantByEventAndUserRepository(
+      supabase,
+      event.id,
+      userId,
+    );
+    if (participant) {
+      existingParticipant = {
+        guestToken: participant.guest_token,
+        name: participant.name,
+        memo: participant.memo,
+        status: participant.status,
+      };
+    }
+  }
+
+  return { event, registeredCount, isFull, existingParticipant };
 }
 
 export async function joinEvent(

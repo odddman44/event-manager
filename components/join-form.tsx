@@ -14,7 +14,7 @@ import {
   cancelParticipationAction,
   reactivateParticipationAction,
 } from "@/src/controllers/participant-controller";
-import type { Event } from "@/src/types";
+import type { Event, ParticipantStatus } from "@/src/types";
 
 // UI 상태 타입 정의
 type PageState = "form" | "completed" | "cancelled" | "full";
@@ -91,6 +91,12 @@ interface JoinFormProps {
   event: Event;
   registeredCount: number;
   isFull: boolean;
+  existingParticipant: {
+    guestToken: string;
+    name: string;
+    memo: string | null;
+    status: ParticipantStatus;
+  } | null;
 }
 
 export default function JoinForm({
@@ -98,9 +104,19 @@ export default function JoinForm({
   event,
   registeredCount,
   isFull,
+  existingParticipant,
 }: JoinFormProps) {
-  const [state, setState] = useState<PageState>(isFull ? "full" : "form");
-  const [guestToken, setGuestToken] = useState<string | null>(null);
+  const [state, setState] = useState<PageState>(() => {
+    if (existingParticipant) {
+      return existingParticipant.status === "cancelled"
+        ? "cancelled"
+        : "completed";
+    }
+    return isFull ? "full" : "form";
+  });
+  const [guestToken, setGuestToken] = useState<string | null>(
+    existingParticipant?.guestToken ?? null,
+  );
   // 참여/취소 후 서버가 돌려준 최신 인원수로 갱신 (초기값은 서버 렌더 시점 값)
   const [count, setCount] = useState(registeredCount);
   // 완료 문구는 방금 신청/재참여한 경우에만 노출 (재방문 시에는 부적절)
@@ -113,13 +129,23 @@ export default function JoinForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // 완료 상태에서 저장된 참여자 이름/메모
-  const [savedName, setSavedName] = useState("");
-  const [editMemo, setEditMemo] = useState("");
+  const [savedName, setSavedName] = useState(existingParticipant?.name ?? "");
+  const [editMemo, setEditMemo] = useState(existingParticipant?.memo ?? "");
   const [isSavingMemo, setIsSavingMemo] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
 
-  // 재방문 인식: localStorage의 guest_token으로 기존 참여 조회
+  // 재방문 인식: 서버가 이미 로그인 사용자의 기존 참여를 찾아 넘겨준 경우 이 기기의
+  // localStorage에도 기록해 다음 방문부터는 별도 조회 없이 바로 인식되게 한다.
+  // 그렇지 않다면 기존과 동일하게 localStorage의 guest_token으로 조회한다.
   useEffect(() => {
+    if (existingParticipant) {
+      localStorage.setItem(
+        guestTokenKey(shareToken),
+        existingParticipant.guestToken,
+      );
+      return;
+    }
+
     const storedToken = localStorage.getItem(guestTokenKey(shareToken));
     if (!storedToken) {
       return;
@@ -139,7 +165,7 @@ export default function JoinForm({
         result.participant.status === "cancelled" ? "cancelled" : "completed",
       );
     });
-  }, [shareToken]);
+  }, [shareToken, existingParticipant]);
 
   // 참여하기 버튼 클릭 → 실제 참여 등록
   async function handleJoin() {

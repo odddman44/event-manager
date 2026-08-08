@@ -11,7 +11,9 @@ async function JoinPageContent({
   const { share_token } = await params;
 
   const supabase = await createClient();
-  const data = await getJoinPageData(supabase, share_token);
+  const { data: claims } = await supabase.auth.getClaims();
+  const userId = claims?.claims?.sub ?? null;
+  const data = await getJoinPageData(supabase, share_token, userId);
 
   if (!data) {
     return (
@@ -30,6 +32,7 @@ async function JoinPageContent({
       event={data.event}
       registeredCount={data.registeredCount}
       isFull={data.isFull}
+      existingParticipant={data.existingParticipant}
     />
   );
 }
