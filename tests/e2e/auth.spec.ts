@@ -49,12 +49,9 @@ test.describe("일반 사용자 로그인 플로우", () => {
     await page.getByLabel("이메일").fill(process.env.TEST_USER_EMAIL!);
     await page.getByLabel("비밀번호").fill("wrongpassword");
     await page.getByRole("button", { name: "로그인" }).click();
-    // 로그인 폼에 "비밀번호를 잊으셨나요?" 링크가 추가되면서 느슨한 정규식이
-    // 페이지의 다른 텍스트(라벨 등)와도 매칭되어 strict mode violation이 발생했다.
-    // 실제 에러 메시지가 렌더링되는 영역(form 내 text-red-500 문단)으로 범위를 좁힌다.
-    await expect(page.locator("form p.text-red-500")).toBeVisible({
-      timeout: 5000,
-    });
+    // 에러 메시지 문단에 role="alert"를 붙여, 스타일(클래스명) 변경에 영향받지 않고
+    // 접근성 역할로 안정적으로 찾을 수 있게 한다.
+    await expect(page.getByRole("alert")).toBeVisible({ timeout: 5000 });
     await expect(page).toHaveURL(/\/auth\/login/);
   });
 

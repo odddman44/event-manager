@@ -105,7 +105,11 @@ export function LoginForm({
                 />
               </div>
               {/* 에러 메시지 영역 */}
-              {error && <p className="text-sm text-red-500">{error}</p>}
+              {error && (
+                <p role="alert" className="text-sm text-red-500">
+                  {error}
+                </p>
+              )}
               <Button
                 type="submit"
                 className="bg-primary hover:bg-primary/90 w-full text-white"
