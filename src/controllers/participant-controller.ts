@@ -150,10 +150,13 @@ export async function reactivateParticipationAction(
   guestToken: string,
 ): Promise<CountedActionResult> {
   const supabase = await createClient();
+  const { data: claims } = await supabase.auth.getClaims();
+  const userId = claims?.claims?.sub ?? null;
   try {
     const participant = await reactivateParticipationService(
       supabase,
       guestToken,
+      userId,
     );
     const registeredCount = await countRegisteredByEventIdService(
       supabase,

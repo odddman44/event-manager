@@ -107,7 +107,7 @@ export async function joinEvent(
           throw new Error("이 이벤트는 정원이 가득 찼습니다.");
         }
       }
-      return reactivateParticipationRepository(existing.guest_token);
+      return reactivateParticipationRepository(existing.guest_token, userId);
     }
   }
 
@@ -157,6 +157,7 @@ export async function cancelParticipation(
 export async function reactivateParticipation(
   supabase: SupabaseClient<Database>,
   guestToken: string,
+  userId?: string | null,
 ): Promise<Participant> {
   const participant = await getParticipantByGuestTokenRepository(
     supabase,
@@ -181,7 +182,7 @@ export async function reactivateParticipation(
     }
   }
 
-  return reactivateParticipationRepository(guestToken);
+  return reactivateParticipationRepository(guestToken, userId);
 }
 
 export async function countRegisteredByEventId(
