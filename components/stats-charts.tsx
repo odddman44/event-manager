@@ -20,7 +20,7 @@ import {
 import type { StatsData } from "@/src/services/admin-service";
 
 // 상태 분포 파이차트 색상 (예정 / 진행 중 / 종료 순서 — getEventStatusDistribution의 반환 순서와 일치)
-const STATUS_COLORS = ["#111827", "#6b7280", "#d1d5db"];
+const STATUS_COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)"];
 
 export function StatsCharts({
   eventTrend,
@@ -52,7 +52,7 @@ export function StatsCharts({
               type="monotone"
               dataKey="count"
               name="이벤트 수"
-              stroke="#111827"
+              stroke="var(--chart-1)"
               strokeWidth={2}
               dot={{ r: 3 }}
               activeDot={{ r: 5 }}
@@ -114,8 +114,9 @@ export function StatsCharts({
               type="monotone"
               dataKey="count"
               name="가입자 수"
-              stroke="#6b7280"
-              fill="#d1d5db"
+              stroke="var(--chart-2)"
+              fill="var(--chart-2)"
+              fillOpacity={0.25}
               strokeWidth={2}
             />
           </AreaChart>
@@ -151,7 +152,7 @@ export function StatsCharts({
             <Bar
               dataKey="participants"
               name="참여자"
-              fill="#111827"
+              fill="var(--chart-1)"
               radius={[0, 4, 4, 0]}
             />
           </BarChart>
