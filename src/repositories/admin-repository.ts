@@ -51,11 +51,21 @@ function bucketByDay(
   return [...buckets].map(([date, count]) => ({ date, count }));
 }
 
+const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+
+// "days일 전 KST 자정"에 해당하는 실제 UTC 시각을 구한다. 서버가 어느 타임존에서 실행되든
+// (Vercel은 UTC) 항상 같은 결과가 나오도록, 로컬 Date 메서드 대신 UTC getter/setter만 사용해
+// KST 오프셋을 직접 더하고 뺀다. KST는 서머타임이 없는 고정 UTC+9라 이 계산이 항상 정확하다.
 function daysAgoStart(days: number): Date {
-  const since = new Date();
-  since.setDate(since.getDate() - (days - 1));
-  since.setHours(0, 0, 0, 0);
-  return since;
+  const now = new Date();
+  // 현재 UTC 시각에 9시간을 더하면, 그 결과를 UTC 필드로 읽었을 때 "KST 벽시계 값"과 같아진다.
+  const kstWallClock = new Date(now.getTime() + KST_OFFSET_MS);
+  const year = kstWallClock.getUTCFullYear();
+  const month = kstWallClock.getUTCMonth();
+  const day = kstWallClock.getUTCDate() - (days - 1);
+  // 위에서 구한 "KST 캘린더 날짜"의 00:00(KST)에 해당하는 실제 UTC 시각
+  // = 그 날짜의 UTC 00:00에서 9시간을 뺀 값
+  return new Date(Date.UTC(year, month, day) - KST_OFFSET_MS);
 }
 
 export async function countEvents(
