@@ -9,6 +9,7 @@ import {
   countRegisteredParticipants as countRegisteredParticipantsRepository,
   createParticipant as createParticipantRepository,
   getParticipantByGuestToken as getParticipantByGuestTokenRepository,
+  getParticipantByEventAndUser as getParticipantByEventAndUserRepository,
   updateParticipantMemo as updateParticipantMemoRepository,
   cancelParticipation as cancelParticipationRepository,
   reactivateParticipation as reactivateParticipationRepository,
@@ -53,6 +54,32 @@ export async function joinEvent(
   const event = await getEventByShareTokenRepository(supabase, shareToken);
   if (!event) {
     throw new Error("유효하지 않은 참여 링크입니다.");
+  }
+
+  // 로그인 사용자가 이 이벤트에 이미 참여한 적이 있다면 새 레코드를 만들지 않는다.
+  // (다른 기기에서 같은 링크를 다시 열어 참여를 시도하는 경우 중복 생성을 막기 위함)
+  if (userId) {
+    const existing = await getParticipantByEventAndUserRepository(
+      supabase,
+      event.id,
+      userId,
+    );
+    if (existing) {
+      if (existing.status === "registered") {
+        return existing;
+      }
+      // 취소했던 참여였다면 재활성화한다 (reactivateParticipation과 동일한 정원 재검증)
+      if (event.max_participants !== null) {
+        const registeredCount = await countRegisteredParticipantsRepository(
+          supabase,
+          event.id,
+        );
+        if (registeredCount >= event.max_participants) {
+          throw new Error("이 이벤트는 정원이 가득 찼습니다.");
+        }
+      }
+      return reactivateParticipationRepository(existing.guest_token);
+    }
   }
 
   if (event.max_participants !== null) {

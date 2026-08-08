@@ -37,8 +37,23 @@ export async function createParticipant(
     .select()
     .single();
 
-  if (error || !data) {
-    throw new Error(error?.message ?? "참여 신청에 실패했습니다.");
+  if (error) {
+    // 동시 요청으로 (event_id, user_id) 유니크 제약에 걸린 경우 — 이미 참여 중인 기존
+    // 레코드를 그대로 반환한다(서비스 레이어의 "먼저 조회" 로직이 놓친 레이스 컨디션 방어)
+    if (error.code === "23505" && userId) {
+      const existing = await getParticipantByEventAndUser(
+        supabase,
+        eventId,
+        userId,
+      );
+      if (existing) {
+        return existing;
+      }
+    }
+    throw new Error(error.message);
+  }
+  if (!data) {
+    throw new Error("참여 신청에 실패했습니다.");
   }
   return data;
 }
@@ -51,6 +66,24 @@ export async function getParticipantByGuestToken(
     .from("participants")
     .select("*")
     .eq("guest_token", guestToken)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+  return data;
+}
+
+export async function getParticipantByEventAndUser(
+  supabase: SupabaseClient<Database>,
+  eventId: string,
+  userId: string,
+): Promise<Participant | null> {
+  const { data, error } = await supabase
+    .from("participants")
+    .select("*")
+    .eq("event_id", eventId)
+    .eq("user_id", userId)
     .maybeSingle();
 
   if (error) {
