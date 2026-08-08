@@ -62,7 +62,7 @@ export async function listEventsByOrganizer(
     .from("events")
     .select("*")
     .eq("organizer_id", organizerId)
-    .order("created_at", { ascending: false });
+    .order("event_date", { ascending: true });
 
   if (error) {
     throw new Error(error.message);
