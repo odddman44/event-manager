@@ -1,4 +1,45 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
+
+// browser.newContext()로 만든 컨텍스트는 playwright.config.ts의 use.baseURL을 상속하지
+// 않으므로(fixture가 아니라 raw browser API다) 직접 넘겨야 상대 경로 goto가 동작한다.
+const BASE_URL = "http://localhost:3001";
+
+// 스타터킷 시절 고정 더미 데이터에 의존하던 테스트들을, 테스트가 직접 만든 이벤트로
+// 검증하도록 바꾸기 위한 헬퍼. 이름에 타임스탬프를 넣어 병렬/반복 실행에도 충돌하지 않는다.
+async function createEvent(
+  page: Page,
+  options: { maxParticipants?: number } = {},
+): Promise<{ title: string; eventId: string; shareToken: string }> {
+  const title = `E2E 이벤트 ${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+  await page.goto("/events/new");
+  await page.locator("input#title").fill(title);
+  await page.locator("input#event_date").fill("2026-12-31T19:00");
+  if (options.maxParticipants !== undefined) {
+    await page
+      .locator("input#max_participants")
+      .fill(String(options.maxParticipants));
+  }
+  await page.getByRole("button", { name: "이벤트 만들기" }).click();
+
+  // 생성 성공 시 /events/{id}로 이동한다
+  await page.waitForURL(/\/events\/[0-9a-f-]{36}$/);
+  const eventId = page.url().split("/").pop()!;
+  // 상세 페이지는 Suspense로 감싼 서버 컴포넌트라 URL 전환 직후에는 아직
+  // 공유 링크가 렌더링되지 않을 수 있다. 네트워크가 잦아들 때까지 기다린다.
+  await page.waitForLoadState("networkidle");
+
+  // 상세 페이지에 표시된 공유 링크에서 share_token을 뽑아낸다.
+  // 특정 요소를 로케이터로 집으면 마크업이 바뀔 때 깨지므로 페이지 텍스트 전체에서 찾는다.
+  const bodyText = await page.locator("body").innerText();
+  const match = bodyText.match(/\/join\/([A-Za-z0-9_-]+)/);
+  if (!match) {
+    throw new Error("이벤트 상세 페이지에서 공유 링크를 찾지 못했습니다.");
+  }
+  const shareToken = match[1];
+
+  return { title, eventId, shareToken };
+}
 
 // ──────────────────────────────────────────────
 // 랜딩 페이지
@@ -105,18 +146,25 @@ test.describe("어드민 대시보드 /admin", () => {
 
   test("사이드바에 4개 메뉴가 있다", async ({ page }) => {
     await page.goto("/admin");
-    await expect(page.getByRole("link", { name: "대시보드" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "이벤트 관리" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "사용자 관리" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "통계 분석" })).toBeVisible();
+    const sidebar = page.locator("aside");
+    await expect(sidebar.getByRole("link", { name: "대시보드" })).toBeVisible();
+    await expect(
+      sidebar.getByRole("link", { name: "이벤트 관리" }),
+    ).toBeVisible();
+    await expect(
+      sidebar.getByRole("link", { name: "사용자 관리" }),
+    ).toBeVisible();
+    await expect(
+      sidebar.getByRole("link", { name: "통계 분석" }),
+    ).toBeVisible();
   });
 
   test("통계 카드 4개가 표시된다", async ({ page }) => {
     await page.goto("/admin");
     await expect(page.getByText("총 이벤트")).toBeVisible();
     await expect(page.getByText("총 사용자")).toBeVisible();
-    await expect(page.getByText("진행 중 이벤트")).toBeVisible();
-    await expect(page.getByText("이번 달 신규")).toBeVisible();
+    await expect(page.getByText("총 참여자 수")).toBeVisible();
+    await expect(page.getByText("진행 예정 이벤트")).toBeVisible();
   });
 
   test("사이드바 Moija Admin 로고가 표시된다", async ({ page }) => {
@@ -133,8 +181,13 @@ test.describe("어드민 이벤트 관리 /admin/events", () => {
 
   test("이벤트 테이블과 삭제 버튼이 표시된다", async ({ page }) => {
     await page.goto("/admin/events");
-    await expect(page.getByText("이벤트 관리")).toBeVisible();
-    await expect(page.getByText("2025 개발자 네트워킹 밤")).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "이벤트 관리" }),
+    ).toBeVisible();
+    // 테이블 헤더는 데이터와 무관하게 항상 있어야 한다
+    await expect(
+      page.getByRole("columnheader", { name: "제목" }),
+    ).toBeVisible();
     await expect(
       page.getByRole("button", { name: "삭제" }).first(),
     ).toBeVisible();
@@ -147,11 +200,15 @@ test.describe("어드민 이벤트 관리 /admin/events", () => {
 test.describe("어드민 사용자 관리 /admin/users", () => {
   test.use({ storageState: "tests/.auth/admin.json" });
 
-  test("10명 사용자가 표시된다", async ({ page }) => {
+  test("사용자 목록이 표시된다", async ({ page }) => {
     await page.goto("/admin/users");
-    await expect(page.getByText("사용자 관리")).toBeVisible();
-    await expect(page.getByText("총 10명")).toBeVisible();
-    await expect(page.getByText("김민준")).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "사용자 관리" }),
+    ).toBeVisible();
+    // 총 인원은 계속 변하므로 정확한 숫자 대신 "총 N명" 형식만 확인한다
+    await expect(page.getByText(/총 \d+명/)).toBeVisible();
+    // 테스트 계정은 항상 존재한다
+    await expect(page.getByText(process.env.TEST_USER_EMAIL!)).toBeVisible();
   });
 });
 
@@ -177,9 +234,10 @@ test.describe("주최자 대시보드 /dashboard", () => {
   test.use({ storageState: "tests/.auth/user.json" });
 
   test("모이자 헤더와 이벤트 카드가 표시된다", async ({ page }) => {
+    const { title } = await createEvent(page);
     await page.goto("/dashboard");
     await expect(page.locator("header").getByText("모이자")).toBeVisible();
-    await expect(page.getByText("2025 개발자 네트워킹 밤")).toBeVisible();
+    await expect(page.getByText(title)).toBeVisible();
   });
 
   test("새 이벤트 만들기 버튼이 있다", async ({ page }) => {
@@ -192,44 +250,77 @@ test.describe("주최자 대시보드 /dashboard", () => {
   test("모바일 하단 네비게이션이 있다", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/dashboard");
-    await expect(page.getByText("홈")).toBeVisible();
-    await expect(page.getByText("이벤트")).toBeVisible();
+    const bottomNav = page.locator("nav.fixed");
+    // "이벤트"는 "새 이벤트"의 부분 문자열이라 exact 매칭으로 구분한다
+    await expect(bottomNav.getByText("이벤트", { exact: true })).toBeVisible();
+    await expect(bottomNav.getByText("새 이벤트")).toBeVisible();
+    await expect(bottomNav.getByText("프로필")).toBeVisible();
   });
 });
 
 // ──────────────────────────────────────────────
-// 이벤트 관리 /events/1
+// 이벤트 관리 /events/{id}
 // ──────────────────────────────────────────────
-test.describe("이벤트 관리 /events/1", () => {
+test.describe("이벤트 관리 /events/{id}", () => {
   test.use({ storageState: "tests/.auth/user.json" });
 
-  test("이벤트 정보와 공유 코드가 표시된다", async ({ page }) => {
-    await page.goto("/events/1");
-    await expect(page.getByText("2025 개발자 네트워킹 밤")).toBeVisible();
-    await expect(page.getByText("DEV2025")).toBeVisible();
+  test("이벤트 정보와 공유 링크가 표시된다", async ({ page }) => {
+    const { title, shareToken } = await createEvent(page);
+    await expect(page.getByText(title)).toBeVisible();
+    await expect(
+      page.getByText(new RegExp(`/join/${shareToken}`)),
+    ).toBeVisible();
   });
 
-  test("참여자 목록에 아바타가 표시된다", async ({ page }) => {
-    await page.goto("/events/1");
-    await expect(page.getByText("김민준")).toBeVisible();
-    await expect(page.getByText("호스트")).toBeVisible();
+  test("참여자가 없으면 안내 문구가 표시된다", async ({ page }) => {
+    await createEvent(page);
+    await expect(page.getByText("참여자 목록")).toBeVisible();
+    await expect(page.getByText("아직 참여자가 없습니다.")).toBeVisible();
   });
 });
 
 // ──────────────────────────────────────────────
-// 참여 페이지 /join/demo-token
+// 참여 페이지 /join/{share_token}
 // ──────────────────────────────────────────────
-test.describe("참여 페이지 /join/demo-token", () => {
-  test("이벤트 정보와 참여 폼이 표시된다", async ({ page }) => {
-    await page.goto("/join/demo-token");
-    await expect(page.getByText("2025 개발자 네트워킹 밤")).toBeVisible();
-    await expect(page.getByRole("button", { name: "참여하기" })).toBeVisible();
+test.describe("참여 페이지 /join/{share_token}", () => {
+  test("이벤트 정보와 참여 폼이 표시된다", async ({ browser }) => {
+    // 이벤트 생성은 로그인 컨텍스트에서, 참여는 비회원 컨텍스트에서 수행한다.
+    // 로그인 상태로 참여하면 "이미 참여 중" 인식 로직이 걸려 빈 폼이 뜨지 않는다.
+    const authed = await browser.newContext({
+      baseURL: BASE_URL,
+      storageState: "tests/.auth/user.json",
+    });
+    const authedPage = await authed.newPage();
+    const { title, shareToken } = await createEvent(authedPage);
+    await authed.close();
+
+    const guest = await browser.newContext({ baseURL: BASE_URL });
+    const guestPage = await guest.newPage();
+    await guestPage.goto(`/join/${shareToken}`);
+    await expect(guestPage.getByText(title)).toBeVisible();
+    await expect(
+      guestPage.getByRole("button", { name: "참여하기" }),
+    ).toBeVisible();
+    await guest.close();
   });
 
-  test("이름 입력 후 참여하면 완료 상태로 전환된다", async ({ page }) => {
-    await page.goto("/join/demo-token");
-    await page.getByPlaceholder("홍길동").fill("테스트 참여자");
-    await page.getByRole("button", { name: "참여하기" }).click();
-    await expect(page.getByText("참여 신청이 완료되었습니다!")).toBeVisible();
+  test("이름 입력 후 참여하면 완료 상태로 전환된다", async ({ browser }) => {
+    const authed = await browser.newContext({
+      baseURL: BASE_URL,
+      storageState: "tests/.auth/user.json",
+    });
+    const authedPage = await authed.newPage();
+    const { shareToken } = await createEvent(authedPage);
+    await authed.close();
+
+    const guest = await browser.newContext({ baseURL: BASE_URL });
+    const guestPage = await guest.newPage();
+    await guestPage.goto(`/join/${shareToken}`);
+    await guestPage.getByPlaceholder("홍길동").fill("테스트 참여자");
+    await guestPage.getByRole("button", { name: "참여하기" }).click();
+    await expect(
+      guestPage.getByText("참여 신청이 완료되었습니다!"),
+    ).toBeVisible();
+    await guest.close();
   });
 });
