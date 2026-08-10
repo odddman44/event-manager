@@ -27,8 +27,20 @@ async function ProfileContent() {
     .eq("id", userId)
     .single();
 
+  // 인증은 이미 확인된 상태라 로그인 페이지로 보내면 proxy가 다시 대시보드로 되돌려
+  // 원인을 알 수 없는 튕김이 된다. 프로필 row가 없는 건 가입 트리거가 실패한 경우뿐이므로
+  // 무슨 일이 일어났는지 화면에 알린다.
   if (!profile) {
-    redirect("/auth/login");
+    return (
+      <div className="rounded-card bg-card space-y-3 border p-6 text-center shadow-sm">
+        <p className="font-medium">😕 프로필 정보를 불러오지 못했습니다.</p>
+        <p className="text-muted-foreground text-sm">
+          계정은 정상이지만 프로필 정보가 만들어지지 않았습니다. 잠시 후 다시
+          시도해도 같은 화면이 보이면 관리자에게 문의해주세요.
+        </p>
+        <LogoutButton />
+      </div>
+    );
   }
 
   return (
