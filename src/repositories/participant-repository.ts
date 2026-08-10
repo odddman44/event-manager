@@ -92,6 +92,29 @@ export async function getParticipantByEventAndUser(
   return data;
 }
 
+// 주어진 참여 레코드보다 먼저 등록된 registered 참여자 수(= 그 레코드의 0-based 순번).
+// created_at이 같은 경우 id 사전순으로 tie-break해서, 동시 요청들이 서로 다른 순번을 갖도록 보장한다.
+export async function countRegisteredBefore(
+  supabase: SupabaseClient<Database>,
+  eventId: string,
+  createdAt: string,
+  id: string,
+): Promise<number> {
+  const { count, error } = await supabase
+    .from("participants")
+    .select("*", { count: "exact", head: true })
+    .eq("event_id", eventId)
+    .eq("status", "registered")
+    .or(
+      `created_at.lt.${createdAt},and(created_at.eq.${createdAt},id.lt.${id})`,
+    );
+
+  if (error) {
+    throw new Error(error.message);
+  }
+  return count ?? 0;
+}
+
 // guest_token UPDATE는 RLS에서 anon/authenticated 접근을 막아뒀으므로(누구나 임의 row를 수정할 수
 // 있던 취약점 차단) service_role 클라이언트로만 수행한다. guest_token 소유자 검증은 WHERE 절이 담당.
 export async function updateParticipantMemo(
@@ -171,4 +194,17 @@ export async function reactivateParticipation(
     throw new Error(error?.message ?? "재참여에 실패했습니다.");
   }
   return data;
+}
+
+// 정원 경쟁에서 밀린 자기 행을 되돌리는 용도. participants에는 anon/authenticated DELETE 정책이
+// 없으므로(임의 행 삭제 취약점 차단) service_role 클라이언트로만 수행한다.
+export async function hardDeleteParticipant(id: string): Promise<void> {
+  const adminClient = createAdminClient();
+  const { error } = await adminClient
+    .from("participants")
+    .delete()
+    .eq("id", id);
+  if (error) {
+    throw new Error(error.message);
+  }
 }

@@ -12,7 +12,9 @@ import {
 } from "../repositories/event-repository";
 import {
   countRegisteredParticipants as countRegisteredParticipantsRepository,
+  countRegisteredBefore as countRegisteredBeforeRepository,
   createParticipant as createParticipantRepository,
+  hardDeleteParticipant as hardDeleteParticipantRepository,
   getParticipantByGuestToken as getParticipantByGuestTokenRepository,
   getParticipantByEventAndUser as getParticipantByEventAndUserRepository,
   updateParticipantMemo as updateParticipantMemoRepository,
@@ -121,7 +123,7 @@ export async function joinEvent(
     }
   }
 
-  return createParticipantRepository(
+  const created = await createParticipantRepository(
     supabase,
     event.id,
     {
@@ -130,6 +132,24 @@ export async function joinEvent(
     },
     userId,
   );
+
+  // 사전 카운트만으로는 동시 요청을 막지 못한다(카운트와 insert 사이에 다른 요청이 끼어든다).
+  // 만들어진 뒤 자기 순번을 확인해, 정원을 넘겼다면 자기 행을 되돌리고 거절한다.
+  // 경쟁한 요청들이 각자 자기 순번을 독립적으로 계산하므로 정확히 정원만큼만 살아남는다.
+  if (event.max_participants !== null) {
+    const rank = await countRegisteredBeforeRepository(
+      supabase,
+      event.id,
+      created.created_at,
+      created.id,
+    );
+    if (rank >= event.max_participants) {
+      await hardDeleteParticipantRepository(created.id);
+      throw new Error("이 이벤트는 정원이 가득 찼습니다.");
+    }
+  }
+
+  return created;
 }
 
 export async function getParticipantByGuestToken(
