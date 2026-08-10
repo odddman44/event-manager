@@ -54,6 +54,33 @@ export async function uploadCoverImage(
   return data.publicUrl;
 }
 
+const COVER_BUCKET = "event-covers";
+
+// 저장된 public URL에서 버킷 내부 경로(`{organizerId}/{uuid}.{ext}`)를 다시 뽑아낸다.
+// 형식이 예상과 다르면(외부 URL 등) null을 반환해 호출부가 조용히 건너뛰게 한다.
+function extractCoverPath(publicUrl: string): string | null {
+  const marker = `/storage/v1/object/public/${COVER_BUCKET}/`;
+  const index = publicUrl.indexOf(marker);
+  if (index === -1) {
+    return null;
+  }
+  const path = publicUrl.slice(index + marker.length);
+  return path.length > 0 ? path : null;
+}
+
+// 커버 교체/이벤트 삭제 후 남는 고아 파일을 정리한다. 정리 실패가 본 작업(수정/삭제)을
+// 되돌리게 해서는 안 되므로 에러를 삼킨다.
+export async function deleteCoverImage(
+  supabase: SupabaseClient<Database>,
+  publicUrl: string,
+): Promise<void> {
+  const path = extractCoverPath(publicUrl);
+  if (!path) {
+    return;
+  }
+  await supabase.storage.from(COVER_BUCKET).remove([path]);
+}
+
 export async function listEventsByOrganizer(
   supabase: SupabaseClient<Database>,
   organizerId: string,

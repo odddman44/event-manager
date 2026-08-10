@@ -7,6 +7,7 @@ import {
   createEvent as createEventRepository,
   updateEvent as updateEventRepository,
   uploadCoverImage as uploadCoverImageRepository,
+  deleteCoverImage as deleteCoverImageRepository,
   listEventsByOrganizer as listEventsByOrganizerRepository,
   getEventById as getEventByIdRepository,
   listParticipantsByEvent as listParticipantsByEventRepository,
@@ -94,7 +95,12 @@ export async function deleteEventByOrganizer(
   if (!event || event.organizer_id !== organizerId) {
     throw new Error("이벤트를 찾을 수 없습니다.");
   }
-  return deleteEventRepository(supabase, eventId);
+
+  await deleteEventRepository(supabase, eventId);
+  // 이벤트 행이 사라진 뒤에는 이 커버를 참조할 곳이 없다.
+  if (event.cover_image_url) {
+    await deleteCoverImageRepository(supabase, event.cover_image_url);
+  }
 }
 
 // 주최자 본인이 아니면 에러 (getEventDetail과 동일한 소유자 검증 패턴)
@@ -121,6 +127,11 @@ export async function updateEvent(
       organizerId,
       coverImageFile,
     );
+    // 새 파일 업로드가 성공한 뒤에 이전 파일을 지운다. 순서를 뒤집으면 업로드가
+    // 실패했을 때 이벤트가 커버를 잃는다.
+    if (event.cover_image_url) {
+      await deleteCoverImageRepository(supabase, event.cover_image_url);
+    }
   }
 
   return updateEventRepository(supabase, eventId, {
