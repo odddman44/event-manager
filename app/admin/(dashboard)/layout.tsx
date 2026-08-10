@@ -31,9 +31,19 @@ export default function AdminDashboardLayout({
             </Link>
           ))}
         </div>
-        <div className="mt-4 flex items-center justify-between border-t pt-4">
-          <ThemeSwitcher />
-          <AdminLogoutButton />
+        <div className="mt-4 space-y-3 border-t pt-4">
+          {/* 어드민 계정도 일반 사용자 화면을 쓸 수 있지만 진입 경로가 없었다.
+              랜딩(/)으로 보내면 proxy가 어드민을 다시 /admin으로 되돌리므로 /dashboard로 직접 보낸다. */}
+          <Link
+            href="/dashboard"
+            className="text-muted-foreground hover:bg-muted hover:text-foreground block rounded-md px-3 py-2 text-sm"
+          >
+            사용자 화면으로
+          </Link>
+          <div className="flex items-center justify-between">
+            <ThemeSwitcher />
+            <AdminLogoutButton />
+          </div>
         </div>
       </aside>
       <div className="flex-1 p-6">{children}</div>
