@@ -137,15 +137,31 @@ export async function joinEvent(
   // 만들어진 뒤 자기 순번을 확인해, 정원을 넘겼다면 자기 행을 되돌리고 거절한다.
   // 경쟁한 요청들이 각자 자기 순번을 독립적으로 계산하므로 정확히 정원만큼만 살아남는다.
   if (event.max_participants !== null) {
-    const rank = await countRegisteredBeforeRepository(
-      supabase,
-      event.id,
-      created.created_at,
-      created.id,
-    );
-    if (rank >= event.max_participants) {
-      await hardDeleteParticipantRepository(created.id);
-      throw new Error("이 이벤트는 정원이 가득 찼습니다.");
+    try {
+      const rank = await countRegisteredBeforeRepository(
+        supabase,
+        event.id,
+        created.created_at,
+        created.id,
+      );
+      if (rank >= event.max_participants) {
+        await hardDeleteParticipantRepository(created.id);
+        throw new Error("이 이벤트는 정원이 가득 찼습니다.");
+      }
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        error.message === "이 이벤트는 정원이 가득 찼습니다."
+      ) {
+        throw error;
+      }
+      // 사후 검증(순번 조회/삭제) 자체가 실패하면 orphan 행을 남기지 않기 위해
+      // best-effort로 자기 행 삭제를 시도하고(실패해도 무시), 사용자에게는 raw 에러 대신
+      // 일반적인 안내 메시지를 던진다(fail-closed).
+      await hardDeleteParticipantRepository(created.id).catch(() => {});
+      throw new Error(
+        "참여 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+      );
     }
   }
 
