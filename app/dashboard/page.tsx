@@ -46,6 +46,7 @@ async function EventSections() {
               <OnboardingCallout
                 message="첫 이벤트를 만들어보세요! 제목과 날짜만 있으면 충분해요."
                 onDismiss={completeOnboardingAction}
+                completeOnChildClick={false}
               >
                 {newEventButton}
               </OnboardingCallout>

@@ -12,35 +12,47 @@ interface OnboardingCalloutProps {
   message: string;
   onDismiss: () => Promise<void>;
   children: React.ReactNode;
+  // 감싸인 실제 버튼을 클릭했을 때도 전체 온보딩을 완료 처리할지 여부.
+  // 1단계(이벤트 만들기)는 false — 버튼을 눌러도 온보딩이 끝난 게 아니라 다음
+  // 단계(2단계)로 넘어가는 것뿐이라 로컬로만 닫는다. 2단계(링크 복사)는 true —
+  // 이게 투어의 마지막 단계라 실제 행동 자체가 완료다.
+  completeOnChildClick: boolean;
 }
 
-// 실제 화면 요소(children) 위에 항상 열려 있는 안내 말풍선을 띄운다. ✕를 누르거나
-// children 안의 실제 버튼을 클릭하면(둘 중 어느 쪽이든) 온보딩 완료로 기록하고
-// 사라진다 — "다음" 버튼이 따로 없다. 실제 행동을 하는 것 자체가 다음 단계로의
-// 이동이기 때문이다.
+// 실제 화면 요소(children) 위에 항상 열려 있는 안내 말풍선을 띄운다. ✕는 항상
+// 온보딩 전체를 완료 처리하지만, 감싸인 실제 버튼 클릭은 completeOnChildClick에
+// 따라 다르게 동작한다 — 트리를 교체하지 않고 Popover의 open만 상태로 제어해서
+// children이 언마운트되지 않도록 한다(그래야 예: CopyLinkButton의 "복사됨!" 같은
+// 내부 상태가 클릭 이후에도 유지된다).
 export function OnboardingCallout({
   message,
   onDismiss,
   children,
+  completeOnChildClick,
 }: OnboardingCalloutProps) {
   const [dismissed, setDismissed] = useState(false);
   const [, startTransition] = useTransition();
 
-  if (dismissed) {
-    return <>{children}</>;
-  }
-
-  function handleDismiss() {
-    setDismissed(true); // 낙관적으로 즉시 닫는다 — 서버 액션이 실패해도 사용자는 못 느낀다
+  function handleXClick() {
+    setDismissed(true);
     startTransition(() => {
       onDismiss();
     });
   }
 
+  function handleChildClick() {
+    setDismissed(true);
+    if (completeOnChildClick) {
+      startTransition(() => {
+        onDismiss();
+      });
+    }
+  }
+
   return (
-    <Popover open>
+    <Popover open={!dismissed}>
       <PopoverAnchor asChild>
-        <span onClickCapture={handleDismiss} className="inline-block">
+        <span onClickCapture={handleChildClick} className="inline-block">
           {children}
         </span>
       </PopoverAnchor>
@@ -53,7 +65,7 @@ export function OnboardingCallout({
           <p className="text-sm">{message}</p>
           <button
             type="button"
-            onClick={handleDismiss}
+            onClick={handleXClick}
             aria-label="건너뛰기"
             className="text-muted-foreground hover:text-foreground shrink-0"
           >

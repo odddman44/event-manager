@@ -152,6 +152,7 @@ async function EventDetailContent({
             <OnboardingCallout
               message="이 링크를 복사해서 참여자들에게 공유해보세요!"
               onDismiss={completeOnboardingAction}
+              completeOnChildClick={true}
             >
               <CopyLinkButton link={shareLink} />
             </OnboardingCallout>
