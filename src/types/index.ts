@@ -10,6 +10,7 @@ export interface Profile {
   role: UserRole;
   created_at: string;
   updated_at: string;
+  onboarding_completed_at: string | null;
 }
 
 export interface Event {

@@ -109,6 +109,7 @@ export type Database = {
           email: string;
           full_name: string | null;
           id: string;
+          onboarding_completed_at: string | null;
           role: string;
           updated_at: string;
         };
@@ -118,6 +119,7 @@ export type Database = {
           email: string;
           full_name?: string | null;
           id: string;
+          onboarding_completed_at?: string | null;
           role?: string;
           updated_at?: string;
         };
@@ -127,6 +129,7 @@ export type Database = {
           email?: string;
           full_name?: string | null;
           id?: string;
+          onboarding_completed_at?: string | null;
           role?: string;
           updated_at?: string;
         };
