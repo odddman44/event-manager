@@ -9,7 +9,13 @@ import Link from "next/link";
 import CopyLinkButton from "@/components/copy-link-button";
 import { EventDeleteButton } from "@/components/event-delete-button";
 import { createClient } from "@/lib/supabase/server";
-import { getEventDetail } from "@/src/services/event-service";
+import {
+  getEventDetail,
+  isFirstEventForOrganizer,
+} from "@/src/services/event-service";
+import { isOnboardingPending } from "@/src/services/profile-service";
+import { completeOnboardingAction } from "@/src/controllers/profile-controller";
+import { OnboardingCallout } from "@/components/onboarding/onboarding-callout";
 
 // 날짜 포맷: 2025년 10월 21일 오후 3:36 (서버 실행 위치와 무관하게 KST 고정)
 function formatDate(isoString: string): string {
@@ -39,6 +45,12 @@ async function EventDetailContent({
     redirect("/dashboard");
   }
   const { event, participants } = detail;
+
+  const [onboardingPending, isFirstEvent] = await Promise.all([
+    isOnboardingPending(supabase, organizerId),
+    isFirstEventForOrganizer(supabase, organizerId, id),
+  ]);
+  const showOnboarding = onboardingPending && isFirstEvent;
 
   const registeredParticipants = participants.filter(
     (p) => p.status === "registered",
@@ -136,7 +148,16 @@ async function EventDetailContent({
           <div className="bg-muted text-muted-foreground flex-1 overflow-hidden rounded-md border px-3 py-2 text-sm">
             <span className="block truncate">{shareLink}</span>
           </div>
-          <CopyLinkButton link={shareLink} />
+          {showOnboarding ? (
+            <OnboardingCallout
+              message="이 링크를 복사해서 참여자들에게 공유해보세요!"
+              onDismiss={completeOnboardingAction}
+            >
+              <CopyLinkButton link={shareLink} />
+            </OnboardingCallout>
+          ) : (
+            <CopyLinkButton link={shareLink} />
+          )}
         </div>
       </div>
 
