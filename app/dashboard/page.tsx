@@ -7,16 +7,27 @@ import {
   listEventsByOrganizer,
   listParticipatedEvents,
 } from "@/src/services/event-service";
+import { isOnboardingPending } from "@/src/services/profile-service";
+import { completeOnboardingAction } from "@/src/controllers/profile-controller";
+import { OnboardingCallout } from "@/components/onboarding/onboarding-callout";
 
 async function EventSections() {
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
   const userId = data?.claims?.sub as string;
 
-  const [createdEvents, participatedEvents] = await Promise.all([
-    listEventsByOrganizer(supabase, userId),
-    listParticipatedEvents(supabase, userId),
-  ]);
+  const [createdEvents, participatedEvents, onboardingPending] =
+    await Promise.all([
+      listEventsByOrganizer(supabase, userId),
+      listParticipatedEvents(supabase, userId),
+      isOnboardingPending(supabase, userId),
+    ]);
+
+  const newEventButton = (
+    <Button asChild className="bg-primary hover:bg-primary/90 text-white">
+      <Link href="/events/new">이벤트 만들기</Link>
+    </Button>
+  );
 
   return (
     <div className="space-y-8">
@@ -31,12 +42,16 @@ async function EventSections() {
             <p className="text-muted-foreground mb-6 text-sm">
               첫 이벤트를 만들어보세요!
             </p>
-            <Button
-              asChild
-              className="bg-primary hover:bg-primary/90 text-white"
-            >
-              <Link href="/events/new">이벤트 만들기</Link>
-            </Button>
+            {onboardingPending ? (
+              <OnboardingCallout
+                message="첫 이벤트를 만들어보세요! 제목과 날짜만 있으면 충분해요."
+                onDismiss={completeOnboardingAction}
+              >
+                {newEventButton}
+              </OnboardingCallout>
+            ) : (
+              newEventButton
+            )}
           </div>
         ) : (
           <div className="flex flex-col gap-4">
