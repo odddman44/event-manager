@@ -9,6 +9,7 @@ import {
   uploadCoverImage as uploadCoverImageRepository,
   deleteCoverImage as deleteCoverImageRepository,
   listEventsByOrganizer as listEventsByOrganizerRepository,
+  getEarliestEventIdByOrganizer as getEarliestEventIdByOrganizerRepository,
   getEventById as getEventByIdRepository,
   listParticipantsByEvent as listParticipantsByEventRepository,
   deleteEvent as deleteEventRepository,
@@ -53,6 +54,23 @@ export async function listEventsByOrganizer(
   organizerId: string,
 ): Promise<EventWithParticipantCount[]> {
   return listEventsByOrganizerRepository(supabase, organizerId);
+}
+
+// 조회 실패 시 온보딩을 노출하지 않는 쪽(false)이 안전하다.
+export async function isFirstEventForOrganizer(
+  supabase: SupabaseClient<Database>,
+  organizerId: string,
+  eventId: string,
+): Promise<boolean> {
+  try {
+    const earliestId = await getEarliestEventIdByOrganizerRepository(
+      supabase,
+      organizerId,
+    );
+    return earliestId === eventId;
+  } catch {
+    return false;
+  }
 }
 
 export interface EventDetail {

@@ -125,6 +125,27 @@ export async function listEventsByOrganizer(
   }));
 }
 
+// 이 주최자가 만든 이벤트 중 가장 먼저 생성된 것의 id. 동시 생성 시 id 오름차순으로
+// tie-break해서(Task 1의 countRegisteredBefore와 같은 관례) 결정적으로 만든다.
+export async function getEarliestEventIdByOrganizer(
+  supabase: SupabaseClient<Database>,
+  organizerId: string,
+): Promise<string | null> {
+  const { data, error } = await supabase
+    .from("events")
+    .select("id")
+    .eq("organizer_id", organizerId)
+    .order("created_at", { ascending: true })
+    .order("id", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+  return data?.id ?? null;
+}
+
 export async function getEventById(
   supabase: SupabaseClient<Database>,
   eventId: string,
