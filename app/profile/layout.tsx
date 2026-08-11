@@ -3,6 +3,7 @@ import Link from "next/link";
 import { LogoutButton } from "@/components/logout-button";
 import { BottomNav } from "@/components/bottom-nav";
 import { ThemeSwitcher } from "@/components/theme-switcher";
+import { AdminNavLink } from "@/components/admin-nav-link";
 
 export default function ProfileLayout({
   children,
@@ -23,6 +24,9 @@ export default function ProfileLayout({
             >
               내 이벤트
             </Link>
+            <Suspense fallback={null}>
+              <AdminNavLink />
+            </Suspense>
             <ThemeSwitcher />
             <LogoutButton />
           </nav>
