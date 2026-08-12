@@ -53,6 +53,8 @@ export function LoginForm({ className, redirectTo, ...props }: LoginFormProps) {
       } else {
         router.push(profile?.role === "admin" ? "/admin" : "/dashboard");
       }
+      // 이동 직후 서버 컴포넌트가 최신 인증 상태(쿠키)로 다시 렌더링되도록 강제한다.
+      router.refresh();
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "오류가 발생했습니다");
     } finally {

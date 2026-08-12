@@ -31,7 +31,12 @@ async function JoinPageContent({
   }
 
   return (
+    // key로 로그인 상태(userId)를 넘겨 로그인 전/후 소프트 내비게이션 시 컴포넌트를
+    // 강제로 리마운트한다 — JoinForm의 초기 state는 useState 지연 초기화라 마운트 시점
+    // props로만 계산되고, 리마운트 없이 props만 갱신되면 로그인 전 상태("choice")가
+    // 그대로 남는다.
     <JoinForm
+      key={userId ?? "anonymous"}
       shareToken={share_token}
       event={data.event}
       registeredCount={data.registeredCount}
