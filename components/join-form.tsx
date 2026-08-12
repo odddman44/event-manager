@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { CalendarDays, MapPin, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,7 +18,7 @@ import {
 import type { Event, ParticipantStatus } from "@/src/types";
 
 // UI 상태 타입 정의
-type PageState = "form" | "completed" | "cancelled" | "full";
+type PageState = "form" | "completed" | "cancelled" | "full" | "choice";
 
 function guestTokenKey(shareToken: string): string {
   return `moija_guest_token_${shareToken}`;
@@ -97,6 +98,8 @@ interface JoinFormProps {
     memo: string | null;
     status: ParticipantStatus;
   } | null;
+  isLoggedIn: boolean;
+  loggedInName: string;
 }
 
 export default function JoinForm({
@@ -105,14 +108,20 @@ export default function JoinForm({
   registeredCount,
   isFull,
   existingParticipant,
+  isLoggedIn,
+  loggedInName,
 }: JoinFormProps) {
+  const router = useRouter();
   const [state, setState] = useState<PageState>(() => {
     if (existingParticipant) {
       return existingParticipant.status === "cancelled"
         ? "cancelled"
         : "completed";
     }
-    return isFull ? "full" : "form";
+    if (isFull) {
+      return "full";
+    }
+    return isLoggedIn ? "form" : "choice";
   });
   const [guestToken, setGuestToken] = useState<string | null>(
     existingParticipant?.guestToken ?? null,
@@ -123,7 +132,8 @@ export default function JoinForm({
   const [justJoined, setJustJoined] = useState(false);
 
   // 신규 참여 폼 입력값
-  const [name, setName] = useState("");
+  // 로그인 상태면 프로필 이름으로 미리 채운다(비로그인이면 loggedInName이 빈 문자열).
+  const [name, setName] = useState(loggedInName);
   const [memo, setMemo] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -240,6 +250,30 @@ export default function JoinForm({
       <div className="w-full max-w-sm space-y-4">
         {/* 공통: 이벤트 정보 카드 */}
         <EventInfoCard event={event} registeredCount={count} />
+
+        {/* State 0: 로그인/비회원 선택 (비로그인 방문자만) */}
+        {state === "choice" && (
+          <div className="rounded-card space-y-3 border border-gray-100 bg-white p-4 shadow-sm">
+            <h2 className="font-semibold text-gray-800">참여 방법 선택</h2>
+            <Button
+              className="bg-primary hover:bg-primary/90 w-full text-white"
+              onClick={() =>
+                router.push(
+                  `/auth/login?redirect=${encodeURIComponent(`/join/${shareToken}`)}`,
+                )
+              }
+            >
+              로그인하고 참여하기
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => setState("form")}
+            >
+              비회원으로 계속하기
+            </Button>
+          </div>
+        )}
 
         {/* State 1: 신규 참여 폼 */}
         {state === "form" && (

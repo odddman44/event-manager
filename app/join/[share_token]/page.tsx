@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import JoinForm from "@/components/join-form";
 import { createClient } from "@/lib/supabase/server";
 import { getJoinPageData } from "@/src/services/participant-service";
+import { getFullName } from "@/src/services/profile-service";
 
 async function JoinPageContent({
   params,
@@ -13,7 +14,10 @@ async function JoinPageContent({
   const supabase = await createClient();
   const { data: claims } = await supabase.auth.getClaims();
   const userId = claims?.claims?.sub ?? null;
-  const data = await getJoinPageData(supabase, share_token, userId);
+  const [data, loggedInName] = await Promise.all([
+    getJoinPageData(supabase, share_token, userId),
+    userId ? getFullName(supabase, userId) : Promise.resolve(""),
+  ]);
 
   if (!data) {
     return (
@@ -33,6 +37,8 @@ async function JoinPageContent({
       registeredCount={data.registeredCount}
       isFull={data.isFull}
       existingParticipant={data.existingParticipant}
+      isLoggedIn={userId !== null}
+      loggedInName={loggedInName}
     />
   );
 }
