@@ -298,6 +298,10 @@ test.describe("참여 페이지 /join/{share_token}", () => {
     const guestPage = await guest.newPage();
     await guestPage.goto(`/join/${shareToken}`);
     await expect(guestPage.getByText(title)).toBeVisible();
+    // 비로그인 방문자는 먼저 "참여 방법 선택" 화면을 거친다.
+    await guestPage
+      .getByRole("button", { name: "비회원으로 계속하기" })
+      .click();
     await expect(
       guestPage.getByRole("button", { name: "참여하기" }),
     ).toBeVisible();
@@ -316,6 +320,10 @@ test.describe("참여 페이지 /join/{share_token}", () => {
     const guest = await browser.newContext({ baseURL: BASE_URL });
     const guestPage = await guest.newPage();
     await guestPage.goto(`/join/${shareToken}`);
+    // 비로그인 방문자는 먼저 "참여 방법 선택" 화면을 거친다.
+    await guestPage
+      .getByRole("button", { name: "비회원으로 계속하기" })
+      .click();
     await guestPage.getByPlaceholder("홍길동").fill("테스트 참여자");
     await guestPage.getByRole("button", { name: "참여하기" }).click();
     await expect(
