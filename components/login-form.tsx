@@ -1,5 +1,6 @@
 "use client";
 
+import { isSafeRedirect } from "@/src/lib/safe-redirect";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -17,10 +18,11 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { GoogleLoginButton } from "@/components/google-login-button";
 
-export function LoginForm({
-  className,
-  ...props
-}: React.ComponentPropsWithoutRef<"div">) {
+interface LoginFormProps extends React.ComponentPropsWithoutRef<"div"> {
+  redirectTo?: string;
+}
+
+export function LoginForm({ className, redirectTo, ...props }: LoginFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -46,7 +48,11 @@ export function LoginForm({
         .eq("id", data.user.id)
         .single();
 
-      router.push(profile?.role === "admin" ? "/admin" : "/dashboard");
+      if (isSafeRedirect(redirectTo)) {
+        router.push(redirectTo);
+      } else {
+        router.push(profile?.role === "admin" ? "/admin" : "/dashboard");
+      }
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "오류가 발생했습니다");
     } finally {
@@ -63,7 +69,7 @@ export function LoginForm({
         </CardHeader>
         <CardContent>
           <div className="mb-6 flex flex-col gap-6">
-            <GoogleLoginButton />
+            <GoogleLoginButton redirectTo={redirectTo} />
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <span className="border-border w-full border-t" />

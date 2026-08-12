@@ -1,5 +1,6 @@
 "use client";
 
+import { isSafeRedirect } from "@/src/lib/safe-redirect";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -27,7 +28,11 @@ function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
-export function GoogleLoginButton() {
+interface GoogleLoginButtonProps {
+  redirectTo?: string;
+}
+
+export function GoogleLoginButton({ redirectTo }: GoogleLoginButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -36,11 +41,18 @@ export function GoogleLoginButton() {
     setIsLoading(true);
     setError(null);
 
+    // 구글 로그인은 Supabase 인증 서버를 거쳐 돌아오므로, 최종 목적지를
+    // /auth/callback의 쿼리 파라미터로 실어 보낸다.
+    const callbackUrl = new URL("/auth/callback", window.location.origin);
+    if (isSafeRedirect(redirectTo)) {
+      callbackUrl.searchParams.set("next", redirectTo);
+    }
+
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: callbackUrl.toString(),
         },
       });
       if (error) throw error;
