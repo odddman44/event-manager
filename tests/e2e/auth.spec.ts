@@ -69,6 +69,21 @@ test.describe("일반 사용자 로그인 플로우", () => {
     await page.goto("/auth/login");
     await expect(page).toHaveURL("/dashboard", { timeout: 5000 });
   });
+
+  test("redirect 파라미터의 백슬래시 오픈 리다이렉트 시도 차단 → /dashboard 이동", async ({
+    page,
+  }) => {
+    // "/\evil.com"(인코딩: %2F%5Cevil.com)은 브라우저 URL 파서가 "//evil.com"과
+    // 동일하게 해석해 외부로 리다이렉트될 수 있는 값이다. isSafeRedirect가 이를
+    // 안전하지 않은 경로로 판별해 무시하고, 원래 로그인 성공 시 기본 목적지로
+    // 이동하는지 검증한다.
+    await page.goto("/auth/login?redirect=%2F%5Cevil.com");
+    await page.getByLabel("이메일").fill(process.env.TEST_USER_EMAIL!);
+    await page.getByLabel("비밀번호").fill(process.env.TEST_USER_PASSWORD!);
+    await page.getByRole("button", { name: "로그인" }).click();
+    await expect(page).toHaveURL("/dashboard", { timeout: 8000 });
+    expect(page.url()).not.toContain("evil.com");
+  });
 });
 
 // ──────────────────────────────────────────────

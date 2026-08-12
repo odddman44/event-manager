@@ -62,10 +62,17 @@ GET /join/{token}
 `redirect`/`next` 파라미터 값을 검증 없이 리다이렉트에 그대로 쓰면 `?redirect=https://evil.com` 같은 외부 사이트로의 피싱 벡터가 된다. 두 지점(`login-form.tsx`, `auth/callback/route.ts`) 모두 다음 검증 함수를 통과한 값만 사용한다:
 
 ```ts
-// "/"로 시작하고 "//"로는 시작하지 않는 같은 오리진 상대 경로만 허용한다.
-// "//evil.com"은 브라우저가 프로토콜 상대 URL로 해석해 외부로 나갈 수 있어 별도로 막는다.
+// "/"로 시작하는 같은 오리진 상대 경로만 허용한다. 문자열 접두사 검사(startsWith("//"))만으로는
+// "/\evil.com"처럼 브라우저의 URL 파서가 "//"와 동일하게 해석하는 변형을 막지 못해 오픈 리다이렉트로
+// 이어진다 — 브라우저가 실제로 쓰는 것과 동일한 URL 파서로 검증해야 신뢰할 수 있다.
 function isSafeRedirect(path: string | null): path is string {
-  return !!path && path.startsWith("/") && !path.startsWith("//");
+  if (typeof path !== "string" || !path.startsWith("/")) return false;
+  try {
+    const base = "https://safe.invalid";
+    return new URL(path, base).origin === base;
+  } catch {
+    return false;
+  }
 }
 ```
 
