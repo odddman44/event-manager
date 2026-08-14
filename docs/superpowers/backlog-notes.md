@@ -13,7 +13,10 @@
 
 ---
 
-## #3: 이벤트 "회원만 참가 가능" 옵션
+## #3: 이벤트 "회원만 참가 가능" 옵션 ✅ 완료
+
+> 설계: `docs/superpowers/specs/2026-08-14-members-only-events-design.md`
+> 플랜: `docs/superpowers/plans/2026-08-14-members-only-events.md`
 
 **원문 요청:** "주최자에게 '회원만 참가' 가능하도록 주최할 수 있는 옵션이 있으면 좋을 것 같다."
 
