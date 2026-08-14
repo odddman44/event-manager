@@ -349,4 +349,69 @@ test.describe("참여 페이지 /join/{share_token}", () => {
     ).toBeVisible();
     await guest.close();
   });
+
+  test("회원만 참가 이벤트는 비로그인 방문자에게 로그인 버튼만 보인다", async ({
+    browser,
+  }) => {
+    const authed = await browser.newContext({
+      baseURL: BASE_URL,
+      storageState: "tests/.auth/user.json",
+    });
+    const authedPage = await authed.newPage();
+    const { shareToken } = await createEvent(authedPage, {
+      membersOnly: true,
+    });
+    await authed.close();
+
+    const guest = await browser.newContext({ baseURL: BASE_URL });
+    const guestPage = await guest.newPage();
+    await guestPage.goto(`/join/${shareToken}`);
+    await expect(
+      guestPage.getByRole("button", { name: "로그인하고 참여하기" }),
+    ).toBeVisible();
+    await expect(
+      guestPage.getByRole("button", { name: "비회원으로 계속하기" }),
+    ).not.toBeVisible();
+    await expect(
+      guestPage.getByText("이 모임은 회원만 참여할 수 있어요"),
+    ).toBeVisible();
+    await guest.close();
+  });
+
+  test("일반 이벤트는 회원만 옵션 없이 비회원 버튼도 그대로 보인다(회귀)", async ({
+    browser,
+  }) => {
+    const authed = await browser.newContext({
+      baseURL: BASE_URL,
+      storageState: "tests/.auth/user.json",
+    });
+    const authedPage = await authed.newPage();
+    const { shareToken } = await createEvent(authedPage);
+    await authed.close();
+
+    const guest = await browser.newContext({ baseURL: BASE_URL });
+    const guestPage = await guest.newPage();
+    await guestPage.goto(`/join/${shareToken}`);
+    await expect(
+      guestPage.getByRole("button", { name: "비회원으로 계속하기" }),
+    ).toBeVisible();
+    await guest.close();
+  });
+
+  test("회원만 참가 이벤트도 로그인 상태면 choice 화면 없이 바로 참여 폼이 보인다(회귀)", async ({
+    browser,
+  }) => {
+    const authed = await browser.newContext({
+      baseURL: BASE_URL,
+      storageState: "tests/.auth/user.json",
+    });
+    const authedPage = await authed.newPage();
+    const { shareToken } = await createEvent(authedPage, {
+      membersOnly: true,
+    });
+    await authedPage.goto(`/join/${shareToken}`);
+    await expect(authedPage.getByPlaceholder("홍길동")).toBeVisible();
+    await expect(authedPage.getByText("참여 방법 선택")).not.toBeVisible();
+    await authed.close();
+  });
 });

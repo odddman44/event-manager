@@ -265,13 +265,19 @@ export default function JoinForm({
             >
               로그인하고 참여하기
             </Button>
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => setState("form")}
-            >
-              비회원으로 계속하기
-            </Button>
+            {event.members_only ? (
+              <p className="text-center text-sm text-gray-500">
+                이 모임은 회원만 참여할 수 있어요
+              </p>
+            ) : (
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => setState("form")}
+              >
+                비회원으로 계속하기
+              </Button>
+            )}
           </div>
         )}
 
