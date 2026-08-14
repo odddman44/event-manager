@@ -34,6 +34,7 @@ async function EditEventContent({
             event_date: event.event_date,
             location: event.location ?? "",
             max_participants: event.max_participants ?? undefined,
+            members_only: event.members_only,
           }}
           existingCoverImageUrl={event.cover_image_url}
         />

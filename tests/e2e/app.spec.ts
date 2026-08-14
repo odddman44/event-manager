@@ -8,7 +8,7 @@ const BASE_URL = "http://localhost:3001";
 // 검증하도록 바꾸기 위한 헬퍼. 이름에 타임스탬프를 넣어 병렬/반복 실행에도 충돌하지 않는다.
 async function createEvent(
   page: Page,
-  options: { maxParticipants?: number } = {},
+  options: { maxParticipants?: number; membersOnly?: boolean } = {},
 ): Promise<{ title: string; eventId: string; shareToken: string }> {
   const title = `E2E 이벤트 ${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
@@ -19,6 +19,9 @@ async function createEvent(
     await page
       .locator("input#max_participants")
       .fill(String(options.maxParticipants));
+  }
+  if (options.membersOnly) {
+    await page.locator("#members_only").click();
   }
   await page.getByRole("button", { name: "이벤트 만들기" }).click();
 
@@ -276,6 +279,21 @@ test.describe("이벤트 관리 /events/{id}", () => {
     await createEvent(page);
     await expect(page.getByText("참여자 목록")).toBeVisible();
     await expect(page.getByText("아직 참여자가 없습니다.")).toBeVisible();
+  });
+
+  test("회원만 참가 체크박스가 생성/수정에 그대로 반영된다", async ({
+    page,
+  }) => {
+    const { eventId } = await createEvent(page, { membersOnly: true });
+    await page.goto(`/events/${eventId}/edit`);
+    await expect(page.locator("#members_only")).toBeChecked();
+
+    await page.locator("#members_only").click();
+    await page.getByRole("button", { name: "수정 완료" }).click();
+    await page.waitForURL(`/events/${eventId}`);
+
+    await page.goto(`/events/${eventId}/edit`);
+    await expect(page.locator("#members_only")).not.toBeChecked();
   });
 });
 

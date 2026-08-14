@@ -3,13 +3,14 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   createEventSchema,
   validateCoverImage,
@@ -26,6 +27,7 @@ interface EventFormDefaultValues {
   event_date: string; // ISO 문자열
   location: string;
   max_participants?: number;
+  members_only: boolean;
 }
 
 interface EventFormProps {
@@ -70,6 +72,7 @@ export default function EventForm({
     register,
     handleSubmit,
     watch,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<z.input<typeof createEventSchema>, unknown, CreateEventInput>({
     resolver: zodResolver(createEventSchema),
@@ -81,6 +84,7 @@ export default function EventForm({
         : "",
       location: defaultValues?.location ?? "",
       max_participants: defaultValues?.max_participants,
+      members_only: defaultValues?.members_only ?? false,
     },
   });
 
@@ -202,6 +206,24 @@ export default function EventForm({
             {errors.max_participants.message}
           </p>
         )}
+      </div>
+
+      {/* 회원만 참가 가능 (선택) */}
+      <div className="flex items-center gap-2">
+        <Controller
+          name="members_only"
+          control={control}
+          render={({ field }) => (
+            <Checkbox
+              id="members_only"
+              checked={field.value}
+              onCheckedChange={field.onChange}
+            />
+          )}
+        />
+        <Label htmlFor="members_only" className="cursor-pointer font-normal">
+          회원만 참가 가능
+        </Label>
       </div>
 
       {/* 이벤트 설명 (선택, max 500자) */}
