@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { CalendarDays, MapPin, Users } from "lucide-react";
+import { ArrowLeft, CalendarDays, MapPin, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -278,6 +278,18 @@ export default function JoinForm({
         {/* State 1: 신규 참여 폼 */}
         {state === "form" && (
           <div className="rounded-card space-y-4 border border-gray-100 bg-white p-4 shadow-sm">
+            {/* 로그인 사용자는 choice 화면을 거치지 않고 바로 이 상태로 들어오므로
+                되돌아갈 choice 화면 자체가 없다 — 비회원 방문자에게만 노출한다. */}
+            {!isLoggedIn && (
+              <button
+                type="button"
+                onClick={() => setState("choice")}
+                className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
+              >
+                <ArrowLeft className="size-4" />
+                참여 방법 다시 선택
+              </button>
+            )}
             <h2 className="font-semibold text-gray-800">참여 신청</h2>
             <div className="space-y-2">
               <Label htmlFor="name">
