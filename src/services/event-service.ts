@@ -46,6 +46,7 @@ export async function createEvent(
     location: emptyToUndefined(input.location),
     max_participants: input.max_participants,
     cover_image_url: coverImageUrl,
+    members_only: input.members_only,
   });
 }
 
@@ -159,6 +160,7 @@ export async function updateEvent(
     location: emptyToUndefined(input.location),
     max_participants: input.max_participants,
     cover_image_url: coverImageUrl,
+    members_only: input.members_only,
   });
 }
 

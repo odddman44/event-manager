@@ -23,6 +23,7 @@ export type Database = {
           id: string;
           location: string | null;
           max_participants: number | null;
+          members_only: boolean;
           organizer_id: string;
           share_token: string;
           title: string;
@@ -35,6 +36,7 @@ export type Database = {
           id?: string;
           location?: string | null;
           max_participants?: number | null;
+          members_only?: boolean;
           organizer_id: string;
           share_token?: string;
           title: string;
@@ -47,6 +49,7 @@ export type Database = {
           id?: string;
           location?: string | null;
           max_participants?: number | null;
+          members_only?: boolean;
           organizer_id?: string;
           share_token?: string;
           title?: string;

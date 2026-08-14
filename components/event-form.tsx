@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import type { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -70,7 +71,7 @@ export default function EventForm({
     handleSubmit,
     watch,
     formState: { errors, isSubmitting },
-  } = useForm<CreateEventInput>({
+  } = useForm<z.input<typeof createEventSchema>, unknown, CreateEventInput>({
     resolver: zodResolver(createEventSchema),
     defaultValues: {
       title: defaultValues?.title ?? "",

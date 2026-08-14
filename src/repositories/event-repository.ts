@@ -23,6 +23,7 @@ export async function createEvent(
       location: dto.location ?? null,
       max_participants: dto.max_participants ?? null,
       cover_image_url: dto.cover_image_url ?? null,
+      members_only: dto.members_only ?? false,
       // share_token은 DB 기본값이 자동 생성
     })
     .select()
@@ -223,6 +224,9 @@ export async function updateEvent(
       }),
       ...(dto.cover_image_url !== undefined && {
         cover_image_url: dto.cover_image_url ?? null,
+      }),
+      ...(dto.members_only !== undefined && {
+        members_only: dto.members_only,
       }),
     })
     .eq("id", eventId)

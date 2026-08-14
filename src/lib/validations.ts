@@ -27,6 +27,7 @@ export const createEventSchema = z.object({
     .int("정원은 정수여야 합니다")
     .positive("정원은 1명 이상이어야 합니다")
     .optional(),
+  members_only: z.boolean().optional().default(false),
 });
 
 export const joinEventSchema = z.object({

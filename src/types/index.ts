@@ -22,6 +22,7 @@ export interface Event {
   location: string | null;
   max_participants: number | null;
   cover_image_url: string | null;
+  members_only: boolean;
   share_token: string;
   created_at: string;
 }
@@ -46,6 +47,7 @@ export interface CreateEventDto {
   location?: string;
   max_participants?: number;
   cover_image_url?: string;
+  members_only?: boolean;
 }
 
 export interface UpdateEventDto {
@@ -55,6 +57,7 @@ export interface UpdateEventDto {
   location?: string;
   max_participants?: number;
   cover_image_url?: string;
+  members_only?: boolean;
 }
 
 export interface CreateParticipantDto {
