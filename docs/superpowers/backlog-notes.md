@@ -160,6 +160,28 @@
 
 ---
 
+## #11: `participants` 테이블의 anon INSERT RLS가 서버 액션을 우회할 수 있음
+
+**발견 경위:** `#3`(회원만 참가 옵션) 최종 브랜치 리뷰에서 발견. 이 브랜치가 만든 회귀는 아니고, 그 이전부터 있던 플랫폼 레이어(RLS) 이슈다.
+
+**문제:** `supabase/migrations/20260628000003_create_participants_table.sql`의 `"비회원 참여 등록"` 정책이 `to anon, authenticated` + `with check (true)`로 `participants` INSERT를 완전히 열어두고 있다. `events`도 `share_token으로 이벤트 공개 조회` 정책이 `using (true)`라 `event_id`를 얻기 쉽다. 즉 브라우저에 노출된 publishable key로 Supabase REST(`POST /rest/v1/participants`)에 직접 요청하면, `src/services/participant-service.ts`의 `joinEvent`(정원 체크, `#3`의 `members_only` 체크 등 모든 서버 방어 로직이 들어있는 곳)를 완전히 건너뛰고 참여자 행을 만들 수 있다.
+
+**영향 범위:** `members_only`뿐 아니라 `max_participants`(정원 제한) 보장도 이미 동일하게 뚫려 있다 — 이번에 새로 생긴 문제가 아니라 원래부터 있던 문제가 `#3`으로 인해 다시 드러난 것.
+
+**브레인스토밍 시작 시 물어볼 것:**
+
+1. INSERT 정책 자체를 없애고 `createParticipant`(`src/repositories/participant-repository.ts`)를 서비스 역할 키(admin client) 경유로 바꾸는 쪽으로 갈지 — 이 프로젝트가 UPDATE/DELETE에는 이미 이런 패턴을 쓴 선례가 있다(`participant-repository.ts` 주석 참고).
+2. 아니면 RLS 정책 자체에 조건을 추가해서(`not exists (select 1 from events e where e.id = event_id and e.members_only and user_id is null)`, 정원 체크는 RLS로 표현하기 더 까다로움) DB 레벨에서 최소한의 방어를 겹으로 둘지.
+3. 이 작업이 `#3`/`#7`(회원만/암호 보호) 두 기능의 실질적 보장 강도에 직접 걸려있는 만큼, 우선순위를 다른 백로그 항목보다 앞당길지 여부.
+
+**관련 코드 위치(이미 파악됨):**
+
+- `supabase/migrations/20260628000003_create_participants_table.sql` — 문제의 INSERT 정책
+- `src/repositories/participant-repository.ts` — `createParticipant`, UPDATE/DELETE의 기존 admin client 패턴
+- `src/services/participant-service.ts`의 `joinEvent` — 우회되는 서버 방어 로직들
+
+---
+
 ## 참고: 이번 논의에서 검토했으나 채택 안 한 것
 
 - **앱 전체를 회원제로 전환** — 비회원 인프라(정원 동시성, 크로스 디바이스 재인식 등)에 이미 많은 작업이 들어가 있고, 캐주얼한 모임 초대 용도에는 로그인 강제가 오히려 참여율을 떨어뜨릴 수 있어 채택 안 함. 대신 `#3`(이벤트별 회원만 옵션)으로 대체.
