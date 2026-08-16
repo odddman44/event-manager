@@ -40,7 +40,10 @@
 
 ---
 
-## #5 + #6: 참여자 목록 공개 + 회원/비회원 뱃지 (통합)
+## #5 + #6: 참여자 목록 공개 + 회원/비회원 뱃지 (통합) ✅ 완료
+
+> 설계: `docs/superpowers/specs/2026-08-16-participant-roster-design.md`
+> 플랜: `docs/superpowers/plans/2026-08-16-participant-roster.md`
 
 **원문 요청:**
 
@@ -165,6 +168,8 @@
 **발견 경위:** `#3`(회원만 참가 옵션) 최종 브랜치 리뷰에서 발견. 이 브랜치가 만든 회귀는 아니고, 그 이전부터 있던 플랫폼 레이어(RLS) 이슈다.
 
 **문제:** `supabase/migrations/20260628000003_create_participants_table.sql`의 `"비회원 참여 등록"` 정책이 `to anon, authenticated` + `with check (true)`로 `participants` INSERT를 완전히 열어두고 있다. `events`도 `share_token으로 이벤트 공개 조회` 정책이 `using (true)`라 `event_id`를 얻기 쉽다. 즉 브라우저에 노출된 publishable key로 Supabase REST(`POST /rest/v1/participants`)에 직접 요청하면, `src/services/participant-service.ts`의 `joinEvent`(정원 체크, `#3`의 `members_only` 체크 등 모든 서버 방어 로직이 들어있는 곳)를 완전히 건너뛰고 참여자 행을 만들 수 있다.
+
+**추가 발견(`#5`/`#6` 구현 중):** SELECT 정책(`"주최자 참여자 목록 조회"`)도 이름과 달리 `using (true)`로 **anon 포함 누구나 전체 참여자 행(이름, 메모, `guest_token` 포함)을 읽을 수 있게** 열려 있다. `#5`/`#6`이 만든 참여자 명단 기능의 애플리케이션 레이어 접근 제어(`getEventParticipantRoster`)도 이 RLS 구멍을 통해 우회 가능하다 — 다만 그 우회로 얻는 정보(메모, guest_token)가 명단 기능이 의도적으로 노출하는 정보(이름, 회원여부, 아바타)보다 훨씬 민감해서, `#5`/`#6`이 새로운 위험을 추가한 것은 아니다.
 
 **영향 범위:** `members_only`뿐 아니라 `max_participants`(정원 제한) 보장도 이미 동일하게 뚫려 있다 — 이번에 새로 생긴 문제가 아니라 원래부터 있던 문제가 `#3`으로 인해 다시 드러난 것.
 
