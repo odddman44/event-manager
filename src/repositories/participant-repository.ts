@@ -1,6 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "../../lib/supabase/database.types";
-import type { CreateParticipantDto, Participant } from "../types";
+import type {
+  CreateParticipantDto,
+  Participant,
+  ParticipantRosterEntry,
+} from "../types";
 import { createAdminClient } from "../../lib/supabase/admin";
 
 export async function countRegisteredParticipants(
@@ -207,4 +211,56 @@ export async function hardDeleteParticipant(id: string): Promise<void> {
   if (error) {
     throw new Error(error.message);
   }
+}
+
+// registered 참여자만, 이름/회원여부/아바타만 반환한다(memo, guest_token 등은 절대 포함하지
+// 않음 — 다른 참여자에게 노출할 정보가 아니다). participants.user_id는 auth.users(id)를
+// 참조하고 profiles를 직접 참조하지 않아 PostgREST 중첩 select로 조인이 안 될 수 있으므로,
+// 이 리포지토리의 listEventsWithOrganizer(admin-repository.ts)와 동일하게 두 번 쿼리 후
+// Map으로 결합한다.
+export async function listRegisteredParticipantsForEvent(
+  supabase: SupabaseClient<Database>,
+  eventId: string,
+): Promise<ParticipantRosterEntry[]> {
+  const { data: participants, error } = await supabase
+    .from("participants")
+    .select("name, user_id")
+    .eq("event_id", eventId)
+    .eq("status", "registered")
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+  if (!participants || participants.length === 0) {
+    return [];
+  }
+
+  const memberIds = [
+    ...new Set(
+      participants
+        .map((p) => p.user_id)
+        .filter((id): id is string => id !== null),
+    ),
+  ];
+
+  const avatarByUserId = new Map<string, string | null>();
+  if (memberIds.length > 0) {
+    const { data: profiles, error: profilesError } = await supabase
+      .from("profiles")
+      .select("id, avatar_url")
+      .in("id", memberIds);
+    if (profilesError) {
+      throw new Error(profilesError.message);
+    }
+    for (const profile of profiles ?? []) {
+      avatarByUserId.set(profile.id, profile.avatar_url);
+    }
+  }
+
+  return participants.map((p) => ({
+    name: p.name,
+    isMember: p.user_id !== null,
+    avatarUrl: p.user_id ? (avatarByUserId.get(p.user_id) ?? null) : null,
+  }));
 }

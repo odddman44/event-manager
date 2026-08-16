@@ -99,3 +99,9 @@ export interface AdminEventSummary extends Event {
 export interface AdminUserSummary extends Profile {
   created_events_count: number;
 }
+
+export interface ParticipantRosterEntry {
+  name: string;
+  isMember: boolean;
+  avatarUrl: string | null;
+}

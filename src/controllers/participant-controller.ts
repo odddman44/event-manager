@@ -13,8 +13,9 @@ import {
   cancelParticipation as cancelParticipationService,
   reactivateParticipation as reactivateParticipationService,
   countRegisteredByEventId as countRegisteredByEventIdService,
+  getEventParticipantRoster as getEventParticipantRosterService,
 } from "../services/participant-service";
-import type { ParticipantStatus } from "../types";
+import type { ParticipantRosterEntry, ParticipantStatus } from "../types";
 
 type JoinEventResult =
   | {
@@ -168,5 +169,32 @@ export async function reactivateParticipationAction(
       success: false,
       error: err instanceof Error ? err.message : "재참여에 실패했습니다.",
     };
+  }
+}
+
+type GetRosterResult =
+  | { success: true; participants: ParticipantRosterEntry[] }
+  | { success: false };
+
+export async function getEventParticipantsAction(
+  shareToken: string,
+  guestToken?: string,
+): Promise<GetRosterResult> {
+  const supabase = await createClient();
+  const { data: claims } = await supabase.auth.getClaims();
+  const userId = claims?.claims?.sub ?? null;
+
+  try {
+    const participants = await getEventParticipantRosterService(
+      supabase,
+      shareToken,
+      userId,
+      guestToken ?? null,
+    );
+    return { success: true, participants };
+  } catch {
+    // 인가 실패든 이벤트 없음이든 이유를 클라이언트에 노출하지 않는다
+    // (getParticipantByGuestTokenAction과 동일한 원칙).
+    return { success: false };
   }
 }

@@ -4,6 +4,7 @@ import type {
   CreateParticipantDto,
   Event,
   Participant,
+  ParticipantRosterEntry,
   ParticipantStatus,
 } from "../types";
 import {
@@ -20,6 +21,7 @@ import {
   updateParticipantMemo as updateParticipantMemoRepository,
   cancelParticipation as cancelParticipationRepository,
   reactivateParticipation as reactivateParticipationRepository,
+  listRegisteredParticipantsForEvent as listRegisteredParticipantsForEventRepository,
 } from "../repositories/participant-repository";
 
 function emptyToUndefined(value?: string): string | undefined {
@@ -232,4 +234,44 @@ export async function countRegisteredByEventId(
   eventId: string,
 ): Promise<number> {
   return countRegisteredParticipantsRepository(supabase, eventId);
+}
+
+// 이 함수가 참여자 명단 기능의 유일한 보안 경계다 — 세션(userId) 또는 guestToken으로
+// "본인이 이 이벤트의 registered 참여자인가"를 확인한 뒤에만 다른 참여자 명단을 돌려준다.
+// UI가 완료 화면에서만 호출해도, 이 체크가 없으면 shareToken만으로 아무나 명단을 가져갈 수 있다.
+export async function getEventParticipantRoster(
+  supabase: SupabaseClient<Database>,
+  shareToken: string,
+  userId: string | null,
+  guestToken: string | null,
+): Promise<ParticipantRosterEntry[]> {
+  const event = await getEventByShareTokenRepository(supabase, shareToken);
+  if (!event) {
+    throw new Error("유효하지 않은 참여 링크입니다.");
+  }
+
+  let isVerifiedParticipant = false;
+
+  if (userId) {
+    const participant = await getParticipantByEventAndUserRepository(
+      supabase,
+      event.id,
+      userId,
+    );
+    isVerifiedParticipant = participant?.status === "registered";
+  } else if (guestToken) {
+    const participant = await getParticipantByGuestTokenRepository(
+      supabase,
+      guestToken,
+    );
+    isVerifiedParticipant =
+      participant?.event_id === event.id &&
+      participant?.status === "registered";
+  }
+
+  if (!isVerifiedParticipant) {
+    throw new Error("참여자만 볼 수 있습니다.");
+  }
+
+  return listRegisteredParticipantsForEventRepository(supabase, event.id);
 }
