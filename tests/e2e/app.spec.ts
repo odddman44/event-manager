@@ -315,7 +315,9 @@ test.describe("참여 페이지 /join/{share_token}", () => {
     const guest = await browser.newContext({ baseURL: BASE_URL });
     const guestPage = await guest.newPage();
     await guestPage.goto(`/join/${shareToken}`);
-    await expect(guestPage.getByText(title)).toBeVisible();
+    // getByText(title)는 generateMetadata가 넣은 <title> 태그와 본문 <h1>
+    // 둘 다에 매치돼 strict mode violation이 나므로 heading 롤로 좁힌다.
+    await expect(guestPage.getByRole("heading", { name: title })).toBeVisible();
     // 비로그인 방문자는 먼저 "참여 방법 선택" 화면을 거친다.
     await guestPage
       .getByRole("button", { name: "비회원으로 계속하기" })
