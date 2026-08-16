@@ -414,4 +414,114 @@ test.describe("참여 페이지 /join/{share_token}", () => {
     await expect(authedPage.getByText("참여 방법 선택")).not.toBeVisible();
     await authed.close();
   });
+
+  test("참여자 명단에 회원/비회원이 뱃지와 함께 보인다", async ({
+    browser,
+  }) => {
+    const authed = await browser.newContext({
+      baseURL: BASE_URL,
+      storageState: "tests/.auth/user.json",
+    });
+    const authedPage = await authed.newPage();
+    const { shareToken } = await createEvent(authedPage);
+    await authed.close();
+
+    // 비회원 참가자 참여
+    const guest = await browser.newContext({ baseURL: BASE_URL });
+    const guestPage = await guest.newPage();
+    await guestPage.goto(`/join/${shareToken}`);
+    await guestPage
+      .getByRole("button", { name: "비회원으로 계속하기" })
+      .click();
+    await guestPage.getByPlaceholder("홍길동").fill("비회원 참가자");
+    await guestPage.getByRole("button", { name: "참여하기" }).click();
+    await expect(
+      guestPage.getByText("참여 신청이 완료되었습니다!"),
+    ).toBeVisible();
+
+    // 로그인 사용자(어드민 계정)도 같은 이벤트에 참여
+    const member = await browser.newContext({
+      baseURL: BASE_URL,
+      storageState: "tests/.auth/admin.json",
+    });
+    const memberPage = await member.newPage();
+    await memberPage.goto(`/join/${shareToken}`);
+    await memberPage.getByRole("button", { name: "참여하기" }).click();
+    await expect(
+      memberPage.getByText("참여 신청이 완료되었습니다!"),
+    ).toBeVisible();
+    await member.close();
+
+    // 비회원 참가자가 완료 화면을 새로고침하면 둘 다 명단에 보여야 한다
+    await guestPage.reload();
+    await expect(guestPage.getByText("함께 참여하는 사람들")).toBeVisible();
+    const guestRow = guestPage.locator("li", { hasText: "비회원 참가자" });
+    await expect(guestRow.getByText("비회원", { exact: true })).toBeVisible();
+    const memberRow = guestPage.locator("li", { hasText: "테스트 관리자" });
+    await expect(memberRow.getByText("회원", { exact: true })).toBeVisible();
+    await guest.close();
+  });
+
+  test("참여하지 않은 방문자에게는 참여자 명단이 보이지 않는다", async ({
+    browser,
+  }) => {
+    const authed = await browser.newContext({
+      baseURL: BASE_URL,
+      storageState: "tests/.auth/user.json",
+    });
+    const authedPage = await authed.newPage();
+    const { shareToken } = await createEvent(authedPage);
+    await authed.close();
+
+    const guest = await browser.newContext({ baseURL: BASE_URL });
+    const guestPage = await guest.newPage();
+    await guestPage.goto(`/join/${shareToken}`);
+    await expect(guestPage.getByText("함께 참여하는 사람들")).not.toBeVisible();
+    await guest.close();
+  });
+
+  test("참여를 취소한 사람은 명단에서 빠진다", async ({ browser }) => {
+    const authed = await browser.newContext({
+      baseURL: BASE_URL,
+      storageState: "tests/.auth/user.json",
+    });
+    const authedPage = await authed.newPage();
+    const { shareToken } = await createEvent(authedPage);
+    await authed.close();
+
+    const guestA = await browser.newContext({ baseURL: BASE_URL });
+    const guestAPage = await guestA.newPage();
+    await guestAPage.goto(`/join/${shareToken}`);
+    await guestAPage
+      .getByRole("button", { name: "비회원으로 계속하기" })
+      .click();
+    await guestAPage.getByPlaceholder("홍길동").fill("참가자A");
+    await guestAPage.getByRole("button", { name: "참여하기" }).click();
+
+    const guestB = await browser.newContext({ baseURL: BASE_URL });
+    const guestBPage = await guestB.newPage();
+    await guestBPage.goto(`/join/${shareToken}`);
+    await guestBPage
+      .getByRole("button", { name: "비회원으로 계속하기" })
+      .click();
+    await guestBPage.getByPlaceholder("홍길동").fill("참가자B");
+    await guestBPage.getByRole("button", { name: "참여하기" }).click();
+
+    await guestBPage.getByRole("button", { name: "참여 취소" }).click();
+    await expect(guestBPage.getByText("참여가 취소되었습니다.")).toBeVisible();
+
+    await guestAPage.reload();
+    await expect(guestAPage.getByText("함께 참여하는 사람들")).toBeVisible();
+    // getByText("참가자A")는 명단 항목 외에 본인 인사말("안녕하세요, 참가자A님!")과도
+    // 겹쳐 strict mode 위반이 나므로 명단 <li>로 범위를 좁힌다.
+    await expect(
+      guestAPage.locator("li", { hasText: "참가자A" }),
+    ).toBeVisible();
+    await expect(
+      guestAPage.locator("li", { hasText: "참가자B" }),
+    ).not.toBeVisible();
+
+    await guestA.close();
+    await guestB.close();
+  });
 });

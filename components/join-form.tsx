@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { ArrowLeft, CalendarDays, MapPin, Users } from "lucide-react";
+import { ArrowLeft, CalendarDays, MapPin, User, Users } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,11 +12,16 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   joinEventAction,
   getParticipantByGuestTokenAction,
+  getEventParticipantsAction,
   updateParticipantMemoAction,
   cancelParticipationAction,
   reactivateParticipationAction,
 } from "@/src/controllers/participant-controller";
-import type { Event, ParticipantStatus } from "@/src/types";
+import type {
+  Event,
+  ParticipantRosterEntry,
+  ParticipantStatus,
+} from "@/src/types";
 
 // UI 상태 타입 정의
 type PageState = "form" | "completed" | "cancelled" | "full" | "choice";
@@ -87,6 +93,23 @@ function EventInfoCard({
   );
 }
 
+// 회원은 프로필 사진이 있으면 그걸, 없으면(비회원 포함) 기본 아이콘을 보여준다.
+// 새 이미지 에셋 없이 기존에 쓰는 lucide 아이콘 패턴을 그대로 따른다.
+function ParticipantAvatar({ avatarUrl }: { avatarUrl: string | null }) {
+  if (avatarUrl) {
+    return (
+      <div className="relative size-8 shrink-0 overflow-hidden rounded-full bg-gray-100">
+        <Image src={avatarUrl} alt="" fill className="object-cover" />
+      </div>
+    );
+  }
+  return (
+    <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-gray-100">
+      <User className="size-4 text-gray-400" />
+    </div>
+  );
+}
+
 interface JoinFormProps {
   shareToken: string;
   event: Event;
@@ -144,6 +167,11 @@ export default function JoinForm({
   const [isSavingMemo, setIsSavingMemo] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
 
+  // 함께 참여하는 사람들 명단 (완료 상태에서만 조회)
+  const [participants, setParticipants] = useState<ParticipantRosterEntry[]>(
+    [],
+  );
+
   // 재방문 인식: 서버가 이미 로그인 사용자의 기존 참여를 찾아 넘겨준 경우 이 기기의
   // localStorage에도 기록해 다음 방문부터는 별도 조회 없이 바로 인식되게 한다.
   // 그렇지 않다면 기존과 동일하게 localStorage의 guest_token으로 조회한다.
@@ -176,6 +204,20 @@ export default function JoinForm({
       );
     });
   }, [shareToken, existingParticipant]);
+
+  // 완료 상태가 되면 함께 참여하는 사람들 명단을 가져온다. 서버 액션이 본인이 실제
+  // registered 참여자인지 세션/guestToken으로 검증하므로, 참여하지 않은 사람에게는
+  // 이 요청 자체가 성공하지 않는다(빈 배열 유지).
+  useEffect(() => {
+    if (state !== "completed") return;
+    getEventParticipantsAction(shareToken, guestToken ?? undefined).then(
+      (result) => {
+        if (result.success) {
+          setParticipants(result.participants);
+        }
+      },
+    );
+  }, [state, shareToken, guestToken]);
 
   // 참여하기 버튼 클릭 → 실제 참여 등록
   async function handleJoin() {
@@ -366,6 +408,37 @@ export default function JoinForm({
             >
               {isCancelling ? "취소 중..." : "참여 취소"}
             </Button>
+          </div>
+        )}
+
+        {/* State 2-1: 참여자 명단 (완료 상태에서만, 본인 포함 registered 참여자만) */}
+        {state === "completed" && participants.length > 0 && (
+          <div className="rounded-card space-y-3 border border-gray-100 bg-white p-4 shadow-sm">
+            <h2 className="font-semibold text-gray-800">
+              함께 참여하는 사람들
+            </h2>
+            <ul className="space-y-3">
+              {participants.map((p, i) => (
+                <li key={i} className="flex items-center gap-3">
+                  <ParticipantAvatar avatarUrl={p.avatarUrl} />
+                  <span className="flex-1 truncate text-sm text-gray-800">
+                    {p.name}
+                  </span>
+                  {p.isMember ? (
+                    <Badge className="shrink-0 border-blue-200 bg-blue-100 text-xs text-blue-700 hover:bg-blue-100">
+                      회원
+                    </Badge>
+                  ) : (
+                    <Badge
+                      variant="secondary"
+                      className="shrink-0 border-gray-200 bg-gray-100 text-xs text-gray-500 hover:bg-gray-100"
+                    >
+                      비회원
+                    </Badge>
+                  )}
+                </li>
+              ))}
+            </ul>
           </div>
         )}
 
