@@ -459,8 +459,10 @@ test.describe("참여 페이지 /join/{share_token}", () => {
     await expect(guestPage.getByText("함께 참여하는 사람들")).toBeVisible();
     const guestRow = guestPage.locator("li", { hasText: "비회원 참가자" });
     await expect(guestRow.getByText("비회원", { exact: true })).toBeVisible();
+    await expect(guestRow.getByTestId("participant-avatar")).toBeVisible();
     const memberRow = guestPage.locator("li", { hasText: "테스트 관리자" });
     await expect(memberRow.getByText("회원", { exact: true })).toBeVisible();
+    await expect(memberRow.getByTestId("participant-avatar")).toBeVisible();
     await guest.close();
   });
 

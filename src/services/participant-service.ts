@@ -259,7 +259,10 @@ export async function getEventParticipantRoster(
       userId,
     );
     isVerifiedParticipant = participant?.status === "registered";
-  } else if (guestToken) {
+  }
+  // 비회원으로 참여한 뒤(user_id null) 로그인만 하고 계정 연결(백필)은 안 된 경우를 위해,
+  // 세션으로 검증되지 않았다면 guestToken으로도 독립적으로 시도한다.
+  if (!isVerifiedParticipant && guestToken) {
     const participant = await getParticipantByGuestTokenRepository(
       supabase,
       guestToken,

@@ -246,7 +246,11 @@ export async function listRegisteredParticipantsForEvent(
 
   const avatarByUserId = new Map<string, string | null>();
   if (memberIds.length > 0) {
-    const { data: profiles, error: profilesError } = await supabase
+    // profiles는 본인 행만 조회 가능한 RLS 정책만 있어(다른 참여자 조회 불가) 요청자 클라이언트로는
+    // 항상 0~1건만 반환된다. 이 명단을 볼 권한 자체는 상위 서비스 레이어에서 이미 검증했으므로,
+    // 다른 회원들의 avatar_url 조회에는 admin 클라이언트로 RLS를 우회한다.
+    const adminClient = createAdminClient();
+    const { data: profiles, error: profilesError } = await adminClient
       .from("profiles")
       .select("id, avatar_url")
       .in("id", memberIds);

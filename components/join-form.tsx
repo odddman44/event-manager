@@ -98,13 +98,19 @@ function EventInfoCard({
 function ParticipantAvatar({ avatarUrl }: { avatarUrl: string | null }) {
   if (avatarUrl) {
     return (
-      <div className="relative size-8 shrink-0 overflow-hidden rounded-full bg-gray-100">
+      <div
+        data-testid="participant-avatar"
+        className="relative size-8 shrink-0 overflow-hidden rounded-full bg-gray-100"
+      >
         <Image src={avatarUrl} alt="" fill className="object-cover" />
       </div>
     );
   }
   return (
-    <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-gray-100">
+    <div
+      data-testid="participant-avatar"
+      className="flex size-8 shrink-0 items-center justify-center rounded-full bg-gray-100"
+    >
       <User className="size-4 text-gray-400" />
     </div>
   );
