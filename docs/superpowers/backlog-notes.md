@@ -187,6 +187,28 @@
 
 ---
 
+## #12: 참여자 아바타 렌더링 분기(실제 사진 vs 기본 아이콘)에 대한 e2e 회귀 방어가 없음
+
+**발견 경위:** `#5`/`#6`(참여자 명단) 최종 브랜치 리뷰의 fix wave 재검증에서 발견.
+
+**맥락:** 최종 리뷰에서 발견된 Critical 버그(참여자 명단의 `profiles` 조회가 RLS에 막혀 회원 아바타가 조용히 항상 기본 아이콘으로 폴백되던 문제)를 `createAdminClient()`로 우회하도록 수정했다(코드 추적으로 두 차례 독립 검증 완료, 실제 버그는 해결됨). 다만 이 수정을 검증할 e2e 테스트를 추가하면서, `components/join-form.tsx`의 `ParticipantAvatar` 컴포넌트가 실제 사진(`<Image>`)과 기본 아이콘(fallback `<div>`) 두 분기 모두에 동일한 `data-testid="participant-avatar"`를 쓰고 있고, 테스트에 쓰인 회원 계정(`test-admin@moija.dev`, 이메일 가입)의 `avatar_url`이 항상 `null`이라, 추가된 어서션이 두 분기를 구분하지 못한다 — 즉 이 Critical 버그가 나중에 다시 회귀해도 e2e 스위트가 못 잡는다.
+
+**결정:** 이번 fix wave에서는 추가 수정 라운드 없이(플랜 프로세스상 최종 리뷰 fix wave는 1회로 제한) 그대로 두고 백로그로 남김 — 실제 기능은 정상 동작이 코드 리뷰로 확인됐고, 남은 건 회귀 방어망의 구멍이라 머지를 막을 사유는 아니라고 판단.
+
+**브레인스토밍 시작 시 물어볼 것:**
+
+1. `ParticipantAvatar`의 두 분기(사진 있음/없음)에 서로 다른 `data-testid`를 부여할지(예: `participant-avatar-photo` / `participant-avatar-fallback`).
+2. e2e 테스트용으로 `avatar_url`이 채워진 계정을 시딩할 방법이 필요한지(현재 테스트 계정 재생성 절차는 이메일 가입만 지원, Google OAuth 사진 URL을 흉내내려면 SQL로 `profiles.avatar_url`을 직접 채워주면 될 것으로 보임).
+3. 이 문제가 `#5`/`#6`에서만 해당하는지, 아니면 앞으로 `profiles`를 읽는 다른 기능에도 같은 "RLS로 막혀서 조용히 실패" 패턴이 반복될 위험이 있는지(관련: 최종 리뷰가 "profiles를 읽는 리포지토리 함수는 호출자의 권한 전제를 주석에 명시하자"는 프로세스 권고를 남김).
+
+**관련 코드 위치(이미 파악됨):**
+
+- `components/join-form.tsx`의 `ParticipantAvatar` — 두 분기가 같은 testid를 공유
+- `tests/e2e/app.spec.ts`의 "참여자 명단에 회원/비회원이 뱃지와 함께 보인다" — 회귀를 못 잡는 어서션
+- `src/repositories/participant-repository.ts`의 `listRegisteredParticipantsForEvent` — 이번에 고친 `createAdminClient()` 사용 지점
+
+---
+
 ## 참고: 이번 논의에서 검토했으나 채택 안 한 것
 
 - **앱 전체를 회원제로 전환** — 비회원 인프라(정원 동시성, 크로스 디바이스 재인식 등)에 이미 많은 작업이 들어가 있고, 캐주얼한 모임 초대 용도에는 로그인 강제가 오히려 참여율을 떨어뜨릴 수 있어 채택 안 함. 대신 `#3`(이벤트별 회원만 옵션)으로 대체.
