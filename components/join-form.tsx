@@ -99,7 +99,7 @@ function ParticipantAvatar({ avatarUrl }: { avatarUrl: string | null }) {
   if (avatarUrl) {
     return (
       <div
-        data-testid="participant-avatar"
+        data-testid="participant-avatar-photo"
         className="relative size-8 shrink-0 overflow-hidden rounded-full bg-gray-100"
       >
         <Image src={avatarUrl} alt="" fill className="object-cover" />
@@ -108,7 +108,7 @@ function ParticipantAvatar({ avatarUrl }: { avatarUrl: string | null }) {
   }
   return (
     <div
-      data-testid="participant-avatar"
+      data-testid="participant-avatar-fallback"
       className="flex size-8 shrink-0 items-center justify-center rounded-full bg-gray-100"
     >
       <User className="size-4 text-gray-400" />

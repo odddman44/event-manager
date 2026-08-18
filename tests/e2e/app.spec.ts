@@ -1,8 +1,19 @@
 import { test, expect, type Page } from "@playwright/test";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
 // browser.newContext()로 만든 컨텍스트는 playwright.config.ts의 use.baseURL을 상속하지
 // 않으므로(fixture가 아니라 raw browser API다) 직접 넘겨야 상대 경로 goto가 동작한다.
 const BASE_URL = "http://localhost:3001";
+
+// 참여자 명단의 아바타 렌더링(실제 사진 vs 기본 아이콘)을 검증하려면 회원 계정에
+// avatar_url이 채워져 있어야 하는데, 테스트 계정은 이메일 가입이라 기본값이 null이다.
+// service role 키로 RLS를 우회해 테스트 안에서 직접 세팅한다.
+function createServiceRoleClient() {
+  return createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+}
 
 // 스타터킷 시절 고정 더미 데이터에 의존하던 테스트들을, 테스트가 직접 만든 이벤트로
 // 검증하도록 바꾸기 위한 헬퍼. 이름에 타임스탬프를 넣어 병렬/반복 실행에도 충돌하지 않는다.
@@ -420,50 +431,77 @@ test.describe("참여 페이지 /join/{share_token}", () => {
   test("참여자 명단에 회원/비회원이 뱃지와 함께 보인다", async ({
     browser,
   }) => {
-    const authed = await browser.newContext({
-      baseURL: BASE_URL,
-      storageState: "tests/.auth/user.json",
-    });
-    const authedPage = await authed.newPage();
-    const { shareToken } = await createEvent(authedPage);
-    await authed.close();
+    const adminDb = createServiceRoleClient();
+    const testAvatarUrl =
+      "https://api.dicebear.com/9.x/identicon/svg?seed=e2e-avatar-test";
+    // 회원 아바타가 실제 사진 URL을 제대로 조회해오는지(RLS 우회 포함) 검증하려고
+    // 테스트 계정에 avatar_url을 직접 세팅한다. 다른 테스트에 영향 없도록 끝에서 되돌린다.
+    await adminDb
+      .from("profiles")
+      .update({ avatar_url: testAvatarUrl })
+      .eq("email", process.env.TEST_ADMIN_EMAIL!);
 
-    // 비회원 참가자 참여
-    const guest = await browser.newContext({ baseURL: BASE_URL });
-    const guestPage = await guest.newPage();
-    await guestPage.goto(`/join/${shareToken}`);
-    await guestPage
-      .getByRole("button", { name: "비회원으로 계속하기" })
-      .click();
-    await guestPage.getByPlaceholder("홍길동").fill("비회원 참가자");
-    await guestPage.getByRole("button", { name: "참여하기" }).click();
-    await expect(
-      guestPage.getByText("참여 신청이 완료되었습니다!"),
-    ).toBeVisible();
+    try {
+      const authed = await browser.newContext({
+        baseURL: BASE_URL,
+        storageState: "tests/.auth/user.json",
+      });
+      const authedPage = await authed.newPage();
+      const { shareToken } = await createEvent(authedPage);
+      await authed.close();
 
-    // 로그인 사용자(어드민 계정)도 같은 이벤트에 참여
-    const member = await browser.newContext({
-      baseURL: BASE_URL,
-      storageState: "tests/.auth/admin.json",
-    });
-    const memberPage = await member.newPage();
-    await memberPage.goto(`/join/${shareToken}`);
-    await memberPage.getByRole("button", { name: "참여하기" }).click();
-    await expect(
-      memberPage.getByText("참여 신청이 완료되었습니다!"),
-    ).toBeVisible();
-    await member.close();
+      // 비회원 참가자 참여
+      const guest = await browser.newContext({ baseURL: BASE_URL });
+      const guestPage = await guest.newPage();
+      await guestPage.goto(`/join/${shareToken}`);
+      await guestPage
+        .getByRole("button", { name: "비회원으로 계속하기" })
+        .click();
+      await guestPage.getByPlaceholder("홍길동").fill("비회원 참가자");
+      await guestPage.getByRole("button", { name: "참여하기" }).click();
+      await expect(
+        guestPage.getByText("참여 신청이 완료되었습니다!"),
+      ).toBeVisible();
 
-    // 비회원 참가자가 완료 화면을 새로고침하면 둘 다 명단에 보여야 한다
-    await guestPage.reload();
-    await expect(guestPage.getByText("함께 참여하는 사람들")).toBeVisible();
-    const guestRow = guestPage.locator("li", { hasText: "비회원 참가자" });
-    await expect(guestRow.getByText("비회원", { exact: true })).toBeVisible();
-    await expect(guestRow.getByTestId("participant-avatar")).toBeVisible();
-    const memberRow = guestPage.locator("li", { hasText: "테스트 관리자" });
-    await expect(memberRow.getByText("회원", { exact: true })).toBeVisible();
-    await expect(memberRow.getByTestId("participant-avatar")).toBeVisible();
-    await guest.close();
+      // 로그인 사용자(어드민 계정)도 같은 이벤트에 참여
+      const member = await browser.newContext({
+        baseURL: BASE_URL,
+        storageState: "tests/.auth/admin.json",
+      });
+      const memberPage = await member.newPage();
+      await memberPage.goto(`/join/${shareToken}`);
+      await memberPage.getByRole("button", { name: "참여하기" }).click();
+      await expect(
+        memberPage.getByText("참여 신청이 완료되었습니다!"),
+      ).toBeVisible();
+      await member.close();
+
+      // 비회원 참가자가 완료 화면을 새로고침하면 둘 다 명단에 보여야 한다
+      await guestPage.reload();
+      await expect(guestPage.getByText("함께 참여하는 사람들")).toBeVisible();
+      const guestRow = guestPage.locator("li", { hasText: "비회원 참가자" });
+      await expect(guestRow.getByText("비회원", { exact: true })).toBeVisible();
+      // 비회원은 항상 기본 아이콘 분기여야 한다
+      await expect(
+        guestRow.getByTestId("participant-avatar-fallback"),
+      ).toBeVisible();
+      const memberRow = guestPage.locator("li", { hasText: "테스트 관리자" });
+      await expect(memberRow.getByText("회원", { exact: true })).toBeVisible();
+      // 회원은 실제 사진 분기여야 하고, avatar_url이 그대로 img src로 흐르는지도 확인한다
+      // (RLS 우회로 profiles를 실제로 조회해왔다는 증거 — 조회가 막히면 fallback으로 빠진다)
+      const memberAvatar = memberRow.getByTestId("participant-avatar-photo");
+      await expect(memberAvatar).toBeVisible();
+      await expect(memberAvatar.locator("img")).toHaveAttribute(
+        "src",
+        new RegExp(encodeURIComponent(testAvatarUrl)),
+      );
+      await guest.close();
+    } finally {
+      await adminDb
+        .from("profiles")
+        .update({ avatar_url: null })
+        .eq("email", process.env.TEST_ADMIN_EMAIL!);
+    }
   });
 
   test("참여하지 않은 방문자에게는 참여자 명단이 보이지 않는다", async ({

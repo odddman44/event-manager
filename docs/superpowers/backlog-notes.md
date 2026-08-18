@@ -187,7 +187,9 @@
 
 ---
 
-## #12: 참여자 아바타 렌더링 분기(실제 사진 vs 기본 아이콘)에 대한 e2e 회귀 방어가 없음
+## #12: 참여자 아바타 렌더링 분기(실제 사진 vs 기본 아이콘)에 대한 e2e 회귀 방어가 없음 ✅ 완료
+
+> `ParticipantAvatar`의 두 분기에 `participant-avatar-photo`/`participant-avatar-fallback` testid를 분리하고, e2e 테스트가 service role 클라이언트로 회원 계정의 `avatar_url`을 직접 세팅해 실제 사진 분기까지 검증하도록 보강했다. 원래의 RLS 우회 코드를 일부러 되돌려서 이 테스트가 실제로 실패하는 것까지 확인 후 복구.
 
 **발견 경위:** `#5`/`#6`(참여자 명단) 최종 브랜치 리뷰의 fix wave 재검증에서 발견.
 
