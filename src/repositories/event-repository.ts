@@ -7,6 +7,7 @@ import type {
   EventWithParticipantCount,
   Participant,
 } from "../types";
+import { createAdminClient } from "../../lib/supabase/admin";
 
 export async function createEvent(
   supabase: SupabaseClient<Database>,
@@ -99,7 +100,10 @@ export async function listEventsByOrganizer(
     return [];
   }
 
-  const { data: participants, error: participantsError } = await supabase
+  // 이미 이 주최자의 이벤트 id로만 필터링된 뒤의 단순 집계지만, participants SELECT
+  // 자체가 RLS로 막혀있어 admin 클라이언트가 필요하다.
+  const adminClient = createAdminClient();
+  const { data: participants, error: participantsError } = await adminClient
     .from("participants")
     .select("event_id")
     .eq("status", "registered")
@@ -189,11 +193,13 @@ export async function deleteEvent(
   }
 }
 
+// getEventDetail 서비스가 event.organizer_id === organizerId를 이미 확인한 뒤 호출한다.
 export async function listParticipantsByEvent(
   supabase: SupabaseClient<Database>,
   eventId: string,
 ): Promise<Participant[]> {
-  const { data, error } = await supabase
+  const adminClient = createAdminClient();
+  const { data, error } = await adminClient
     .from("participants")
     .select("*")
     .eq("event_id", eventId)
@@ -240,15 +246,18 @@ export async function updateEvent(
 }
 
 // 내가 참여한(등록 상태) 이벤트. 본인이 주최한 이벤트는 "내가 만든 이벤트"와 중복되므로 제외한다.
+// app/dashboard/page.tsx가 자기 세션 userId만 넘긴다(비로그인은 미들웨어가 이미 차단).
 export async function listEventsByParticipantUserId(
   supabase: SupabaseClient<Database>,
   userId: string,
 ): Promise<EventWithParticipantCount[]> {
-  const { data: myParticipations, error: participationError } = await supabase
-    .from("participants")
-    .select("event_id")
-    .eq("user_id", userId)
-    .eq("status", "registered");
+  const adminClient = createAdminClient();
+  const { data: myParticipations, error: participationError } =
+    await adminClient
+      .from("participants")
+      .select("event_id")
+      .eq("user_id", userId)
+      .eq("status", "registered");
 
   if (participationError) {
     throw new Error(participationError.message);
@@ -275,7 +284,7 @@ export async function listEventsByParticipantUserId(
     return [];
   }
 
-  const { data: participants, error: participantsError } = await supabase
+  const { data: participants, error: participantsError } = await adminClient
     .from("participants")
     .select("event_id")
     .eq("status", "registered")

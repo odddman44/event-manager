@@ -89,10 +89,14 @@ export async function countUsers(
 }
 
 export async function countParticipants(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- admin client로 전환되어 미사용, 다른 함수들과 시그니처는 유지한다
   supabase: SupabaseClient<Database>,
 ): Promise<number> {
-  // 취소한 참여자는 제외 — 이벤트 목록의 participant_count와 기준을 맞춘다
-  const { count, error } = await supabase
+  // 취소한 참여자는 제외 — 이벤트 목록의 participant_count와 기준을 맞춘다.
+  // admin-controller.ts의 requireAdmin이 상위에서 이미 게이트하지만, participants SELECT
+  // 자체가 RLS로 막혀있어 admin 클라이언트가 필요하다.
+  const adminClient = createAdminClient();
+  const { count, error } = await adminClient
     .from("participants")
     .select("*", { count: "exact", head: true })
     .eq("status", "registered");
@@ -141,7 +145,8 @@ export async function listEventsWithOrganizer(
     ]),
   );
 
-  const { data: participants, error: participantsError } = await supabase
+  const adminClient = createAdminClient();
+  const { data: participants, error: participantsError } = await adminClient
     .from("participants")
     .select("event_id")
     .eq("status", "registered")
@@ -297,7 +302,8 @@ export async function getTopEventsByParticipants(
   if (error) throw new Error(error.message);
   if (!events || events.length === 0) return [];
 
-  const { data: participants, error: participantsError } = await supabase
+  const adminClient = createAdminClient();
+  const { data: participants, error: participantsError } = await adminClient
     .from("participants")
     .select("event_id")
     .eq("status", "registered");
