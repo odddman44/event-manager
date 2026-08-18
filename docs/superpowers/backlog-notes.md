@@ -163,7 +163,10 @@
 
 ---
 
-## #11: `participants` 테이블의 anon INSERT RLS가 서버 액션을 우회할 수 있음
+## #11: `participants` 테이블의 anon INSERT RLS가 서버 액션을 우회할 수 있음 ✅ 완료
+
+> 설계: `docs/superpowers/specs/2026-08-18-participants-rls-lockdown-design.md`
+> 플랜: `docs/superpowers/plans/2026-08-18-participants-rls-lockdown.md`
 
 **발견 경위:** `#3`(회원만 참가 옵션) 최종 브랜치 리뷰에서 발견. 이 브랜치가 만든 회귀는 아니고, 그 이전부터 있던 플랫폼 레이어(RLS) 이슈다.
 

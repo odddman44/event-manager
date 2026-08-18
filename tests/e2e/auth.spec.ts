@@ -1,4 +1,14 @@
 import { test, expect } from "@playwright/test";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+
+// service role 키로 RLS를 우회해, INSERT 회귀 테스트용 실제 이벤트 fixture를 만든다.
+// (app.spec.ts의 createServiceRoleClient와 동일한 패턴)
+function createServiceRoleClient() {
+  return createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+}
 
 // ──────────────────────────────────────────────
 // 접근 제어 미들웨어 (비로그인)
@@ -166,5 +176,102 @@ test.describe("role 기반 접근 제어 (로그인 상태)", () => {
     // /admin 접근 시도
     await page.goto("/admin");
     await expect(page).toHaveURL("/dashboard", { timeout: 5000 });
+  });
+});
+// ──────────────────────────────────────────────
+// participants 테이블 직접 접근 차단 (RLS 보안 회귀)
+// ──────────────────────────────────────────────
+test.describe("participants 테이블 RLS", () => {
+  test("비로그인 상태로 REST에 직접 INSERT/SELECT 요청을 보내도 거부된다", async ({
+    request,
+  }) => {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
+
+    // INSERT 시도에 쓸 실제 이벤트를 service role로 미리 만들어둔다. 존재하지 않는
+    // event_id를 쓰면 FK 제약 위반으로 항상 4xx가 나서, RLS가 막은 것인지 FK가 막은
+    // 것인지 구분할 수 없다(#11 재발을 탐지 못함). 실제 event_id를 써야 INSERT 정책이
+    // 부활했을 때 FK를 통과해 실제로 200/201이 뜨는 것을 잡아낼 수 있다.
+    const adminDb = createServiceRoleClient();
+    const { data: organizer, error: organizerError } = await adminDb
+      .from("profiles")
+      .select("id")
+      .eq("email", process.env.TEST_USER_EMAIL!)
+      .single();
+    if (organizerError || !organizer) {
+      throw new Error(
+        `테스트용 organizer 프로필을 찾지 못했습니다: ${organizerError?.message}`,
+      );
+    }
+    const { data: event, error: eventError } = await adminDb
+      .from("events")
+      .insert({
+        organizer_id: organizer.id,
+        title: "RLS 회귀 테스트용 이벤트",
+        event_date: new Date().toISOString(),
+      })
+      .select("id")
+      .single();
+    if (eventError || !event) {
+      throw new Error(
+        `테스트용 이벤트 생성에 실패했습니다: ${eventError?.message}`,
+      );
+    }
+
+    // INSERT 시도: 실제 event_id로 참여자 생성을 시도한다. INSERT 정책이 아예 없으면
+    // Postgres RLS가 "new row violates row-level security policy" 에러로 요청 자체를
+    // 거부한다(SELECT처럼 빈 배열로 조용히 필터링되는 게 아니라 4xx 에러 응답).
+    // Prefer: return=representation을 쓰지 않는다 — RETURNING은 SELECT 정책까지
+    // 통과해야 하므로, SELECT 정책 없이 INSERT 정책만 부활해도 이 요청이 계속 막혀
+    // 보여서 INSERT 정책 단독 회귀를 못 잡는다. return=minimal(기본값)이어야 순수하게
+    // INSERT 정책만 검증한다.
+    const insertResponse = await request.post(
+      `${supabaseUrl}/rest/v1/participants`,
+      {
+        headers: {
+          apikey: publishableKey,
+          Authorization: `Bearer ${publishableKey}`,
+          "Content-Type": "application/json",
+        },
+        data: {
+          event_id: event.id,
+          name: "RLS 우회 시도",
+        },
+      },
+    );
+    // ok() === false만으로는 NOT NULL/CHECK 제약 위반 등 RLS와 무관한 4xx도
+    // 통과시켜버린다. RLS 위반은 PostgREST가 401 + Postgres 에러코드 42501로
+    // 응답하므로 그 값을 직접 확인해 "RLS가 막았다"를 못 박는다.
+    expect(insertResponse.status()).toBe(401);
+    const insertBody = await insertResponse.json();
+    expect(insertBody.code).toBe("42501");
+
+    // SELECT 확인용으로 실제 참여자 행을 하나 심어둔다. 이 행이 없으면 아래
+    // toEqual([])이 "RLS가 걸러냈다"와 "테이블이 원래 비어있다"를 구분하지 못해
+    // 다른 테스트 파일이 남긴 데이터에 우연히 의존하게 된다.
+    const { error: participantError } = await adminDb
+      .from("participants")
+      .insert({ event_id: event.id, name: "SELECT 회귀 테스트용 참여자" });
+    if (participantError) {
+      throw new Error(
+        `테스트용 참여자 생성에 실패했습니다: ${participantError.message}`,
+      );
+    }
+
+    // SELECT 시도: 참여자를 event_id 조건 없이 직접 조회한다. SELECT 정책이 아예 없으면
+    // Postgres RLS가 모든 행을 조용히 필터링한다 — 요청 자체는 200으로 성공하지만
+    // 결과가 항상 빈 배열이다(INSERT와 달리 에러가 아님).
+    const selectResponse = await request.get(
+      `${supabaseUrl}/rest/v1/participants?select=*&limit=1`,
+      {
+        headers: {
+          apikey: publishableKey,
+          Authorization: `Bearer ${publishableKey}`,
+        },
+      },
+    );
+    expect(selectResponse.ok()).toBe(true);
+    const selectBody = await selectResponse.json();
+    expect(selectBody).toEqual([]);
   });
 });
