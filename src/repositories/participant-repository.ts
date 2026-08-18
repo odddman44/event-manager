@@ -7,11 +7,15 @@ import type {
 } from "../types";
 import { createAdminClient } from "../../lib/supabase/admin";
 
+// participants SELECT는 RLS로 막혀있다(비회원도 정원 체크로 호출해야 해서 신원과 무관하게
+// 항상 동작해야 함 — RLS로는 "카운트만 허용"을 표현할 수 없다). 인가는 이미 이 함수를 호출하는
+// 서비스 레이어에서 처리된다.
 export async function countRegisteredParticipants(
   supabase: SupabaseClient<Database>,
   eventId: string,
 ): Promise<number> {
-  const { count, error } = await supabase
+  const adminClient = createAdminClient();
+  const { count, error } = await adminClient
     .from("participants")
     .select("*", { count: "exact", head: true })
     .eq("event_id", eventId)
@@ -23,13 +27,17 @@ export async function countRegisteredParticipants(
   return count ?? 0;
 }
 
+// participants INSERT는 RLS로 막혀있다(누구나 임의 이벤트에 참여자를 만들 수 있던 취약점 —
+// joinEvent 서비스가 이미 members_only/정원 체크를 마친 뒤 이 함수를 호출한다) admin
+// 클라이언트로만 수행한다.
 export async function createParticipant(
   supabase: SupabaseClient<Database>,
   eventId: string,
   dto: CreateParticipantDto,
   userId?: string | null,
 ): Promise<Participant> {
-  const { data, error } = await supabase
+  const adminClient = createAdminClient();
+  const { data, error } = await adminClient
     .from("participants")
     .insert({
       event_id: eventId,
@@ -62,11 +70,14 @@ export async function createParticipant(
   return data;
 }
 
+// 익명 게스트도 자기 guest_token으로 조회해야 한다 — 여기서는 "신원"이 아니라 "추측 불가능한
+// 토큰을 아는가"가 인가 기준이라 RLS로 표현이 안 된다. admin 클라이언트로 조회한다.
 export async function getParticipantByGuestToken(
   supabase: SupabaseClient<Database>,
   guestToken: string,
 ): Promise<Participant | null> {
-  const { data, error } = await supabase
+  const adminClient = createAdminClient();
+  const { data, error } = await adminClient
     .from("participants")
     .select("*")
     .eq("guest_token", guestToken)
@@ -78,12 +89,15 @@ export async function getParticipantByGuestToken(
   return data;
 }
 
+// 호출부가 항상 자기 세션의 userId만 넘긴다(서비스 레이어가 이미 검증). admin 클라이언트로
+// 조회한다.
 export async function getParticipantByEventAndUser(
   supabase: SupabaseClient<Database>,
   eventId: string,
   userId: string,
 ): Promise<Participant | null> {
-  const { data, error } = await supabase
+  const adminClient = createAdminClient();
+  const { data, error } = await adminClient
     .from("participants")
     .select("*")
     .eq("event_id", eventId)
@@ -98,13 +112,15 @@ export async function getParticipantByEventAndUser(
 
 // 주어진 참여 레코드보다 먼저 등록된 registered 참여자 수(= 그 레코드의 0-based 순번).
 // created_at이 같은 경우 id 사전순으로 tie-break해서, 동시 요청들이 서로 다른 순번을 갖도록 보장한다.
+// 정원 경쟁 순번 계산 — 비회원도 호출해야 하므로 admin 클라이언트를 쓴다.
 export async function countRegisteredBefore(
   supabase: SupabaseClient<Database>,
   eventId: string,
   createdAt: string,
   id: string,
 ): Promise<number> {
-  const { count, error } = await supabase
+  const adminClient = createAdminClient();
+  const { count, error } = await adminClient
     .from("participants")
     .select("*", { count: "exact", head: true })
     .eq("event_id", eventId)
@@ -217,12 +233,14 @@ export async function hardDeleteParticipant(id: string): Promise<void> {
 // 않음 — 다른 참여자에게 노출할 정보가 아니다). participants.user_id는 auth.users(id)를
 // 참조하고 profiles를 직접 참조하지 않아 PostgREST 중첩 select로 조인이 안 될 수 있으므로,
 // 이 리포지토리의 listEventsWithOrganizer(admin-repository.ts)와 동일하게 두 번 쿼리 후
-// Map으로 결합한다.
+// Map으로 결합한다. participants/profiles 둘 다 RLS가 막혀있어(이 명단을 볼 권한은 상위
+// 서비스 레이어에서 이미 검증됨) admin 클라이언트 하나를 두 쿼리에 재사용한다.
 export async function listRegisteredParticipantsForEvent(
   supabase: SupabaseClient<Database>,
   eventId: string,
 ): Promise<ParticipantRosterEntry[]> {
-  const { data: participants, error } = await supabase
+  const adminClient = createAdminClient();
+  const { data: participants, error } = await adminClient
     .from("participants")
     .select("name, user_id")
     .eq("event_id", eventId)
@@ -246,10 +264,6 @@ export async function listRegisteredParticipantsForEvent(
 
   const avatarByUserId = new Map<string, string | null>();
   if (memberIds.length > 0) {
-    // profiles는 본인 행만 조회 가능한 RLS 정책만 있어(다른 참여자 조회 불가) 요청자 클라이언트로는
-    // 항상 0~1건만 반환된다. 이 명단을 볼 권한 자체는 상위 서비스 레이어에서 이미 검증했으므로,
-    // 다른 회원들의 avatar_url 조회에는 admin 클라이언트로 RLS를 우회한다.
-    const adminClient = createAdminClient();
     const { data: profiles, error: profilesError } = await adminClient
       .from("profiles")
       .select("id, avatar_url")
