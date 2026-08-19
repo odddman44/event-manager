@@ -14,12 +14,39 @@ export type Database = {
   };
   public: {
     Tables: {
+      event_passwords: {
+        Row: {
+          created_at: string;
+          event_id: string;
+          password_hash: string;
+        };
+        Insert: {
+          created_at?: string;
+          event_id: string;
+          password_hash: string;
+        };
+        Update: {
+          created_at?: string;
+          event_id?: string;
+          password_hash?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "event_passwords_event_id_fkey";
+            columns: ["event_id"];
+            isOneToOne: true;
+            referencedRelation: "events";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       events: {
         Row: {
           cover_image_url: string | null;
           created_at: string;
           description: string | null;
           event_date: string;
+          has_password: boolean;
           id: string;
           location: string | null;
           max_participants: number | null;
@@ -33,6 +60,7 @@ export type Database = {
           created_at?: string;
           description?: string | null;
           event_date: string;
+          has_password?: boolean;
           id?: string;
           location?: string | null;
           max_participants?: number | null;
@@ -46,6 +74,7 @@ export type Database = {
           created_at?: string;
           description?: string | null;
           event_date?: string;
+          has_password?: boolean;
           id?: string;
           location?: string | null;
           max_participants?: number | null;

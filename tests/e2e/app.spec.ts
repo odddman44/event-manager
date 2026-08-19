@@ -19,7 +19,11 @@ function createServiceRoleClient() {
 // 검증하도록 바꾸기 위한 헬퍼. 이름에 타임스탬프를 넣어 병렬/반복 실행에도 충돌하지 않는다.
 async function createEvent(
   page: Page,
-  options: { maxParticipants?: number; membersOnly?: boolean } = {},
+  options: {
+    maxParticipants?: number;
+    membersOnly?: boolean;
+    password?: string;
+  } = {},
 ): Promise<{ title: string; eventId: string; shareToken: string }> {
   const title = `E2E 이벤트 ${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
@@ -33,6 +37,9 @@ async function createEvent(
   }
   if (options.membersOnly) {
     await page.locator("#members_only").click();
+  }
+  if (options.password !== undefined) {
+    await page.locator("input#password").fill(options.password);
   }
   await page.getByRole("button", { name: "이벤트 만들기" }).click();
 
@@ -475,6 +482,105 @@ test.describe("참여 페이지 /join/{share_token}", () => {
       anonPage.getByRole("link", { name: "모이자" }),
     ).not.toBeVisible();
     await anonContext.close();
+  });
+
+  test("암호로 보호된 이벤트는 틀린 암호로는 정보가 안 보이고, 맞는 암호를 넣으면 보이며 재방문 시 다시 안 묻는다(백로그 #7)", async ({
+    browser,
+  }) => {
+    const organizerContext = await browser.newContext({
+      baseURL: BASE_URL,
+      storageState: "tests/.auth/user.json",
+    });
+    try {
+      const organizerPage = await organizerContext.newPage();
+      const { title, shareToken } = await createEvent(organizerPage, {
+        password: "let-me-in",
+      });
+
+      // 작성자 본인은 암호 없이 바로 정보 + #9 배너가 보여야 한다.
+      await organizerPage.goto(`/join/${shareToken}`);
+      await expect(
+        organizerPage.getByRole("heading", { name: title }),
+      ).toBeVisible();
+      await expect(
+        organizerPage.getByText("이건 당신의 모임입니다"),
+      ).toBeVisible();
+      await organizerContext.close();
+
+      const visitorContext = await browser.newContext({ baseURL: BASE_URL });
+      try {
+        const visitorPage = await visitorContext.newPage();
+        await visitorPage.goto(`/join/${shareToken}`);
+
+        // 암호를 입력하기 전에는 이벤트 제목이 전혀 렌더링되지 않아야 한다.
+        await expect(
+          visitorPage.getByText("암호로 보호된 모임입니다"),
+        ).toBeVisible();
+        await expect(
+          visitorPage.getByRole("heading", { name: title }),
+        ).not.toBeVisible();
+
+        // 틀린 암호 → 계속 잠긴 채로, 에러 메시지 표시.
+        await visitorPage.getByPlaceholder("암호를 입력해주세요").fill("wrong");
+        await visitorPage.getByRole("button", { name: "확인" }).click();
+        await expect(
+          visitorPage.getByText("암호가 올바르지 않습니다."),
+        ).toBeVisible();
+        await expect(
+          visitorPage.getByRole("heading", { name: title }),
+        ).not.toBeVisible();
+
+        // 맞는 암호 → 정보가 보인다(비로그인 방문자는 기존과 동일하게 참여 방법
+        // 선택 화면을 먼저 거친다 — 암호 게이트가 그 이후 단계를 대체하지 않는다).
+        await visitorPage
+          .getByPlaceholder("암호를 입력해주세요")
+          .fill("let-me-in");
+        await visitorPage.getByRole("button", { name: "확인" }).click();
+        await expect(
+          visitorPage.getByRole("heading", { name: title }),
+        ).toBeVisible();
+        await visitorPage
+          .getByRole("button", { name: "비회원으로 계속하기" })
+          .click();
+        await expect(visitorPage.getByPlaceholder("홍길동")).toBeVisible();
+
+        // 재방문(새 페이지 로드) 시 쿠키로 기억해 다시 안 묻는다.
+        await visitorPage.reload();
+        await expect(
+          visitorPage.getByRole("heading", { name: title }),
+        ).toBeVisible();
+        await expect(
+          visitorPage.getByText("암호로 보호된 모임입니다"),
+        ).not.toBeVisible();
+      } finally {
+        await visitorContext.close();
+      }
+    } finally {
+      // organizerContext는 정상 흐름에서 위에서 이미 닫히지만, 그 사이 어서션이
+      // 실패해도 브라우저 컨텍스트가 안 남도록 finally에서 한 번 더 안전하게 닫는다.
+      await organizerContext.close().catch(() => {});
+    }
+  });
+
+  test("암호 없는 이벤트는 기존처럼 곧바로 정보가 보인다(회귀)", async ({
+    browser,
+  }) => {
+    const authed = await browser.newContext({
+      baseURL: BASE_URL,
+      storageState: "tests/.auth/user.json",
+    });
+    const authedPage = await authed.newPage();
+    const { title, shareToken } = await createEvent(authedPage);
+    await authed.close();
+
+    const guest = await browser.newContext({ baseURL: BASE_URL });
+    const guestPage = await guest.newPage();
+    await guestPage.goto(`/join/${shareToken}`);
+    await expect(guestPage.getByRole("heading", { name: title })).toBeVisible();
+    await expect(
+      guestPage.getByText("암호로 보호된 모임입니다"),
+    ).not.toBeVisible();
+    await guest.close();
   });
 
   test("참여자 명단에 회원/비회원이 뱃지와 함께 보인다", async ({

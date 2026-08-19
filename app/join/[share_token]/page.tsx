@@ -1,17 +1,26 @@
 import { cache, Suspense } from "react";
+import { cookies } from "next/headers";
 import { type Metadata } from "next";
 import JoinForm from "@/components/join-form";
+import PasswordGate from "@/components/password-gate";
 import { AppHeader } from "@/components/app-header";
 import { createClient } from "@/lib/supabase/server";
 import { getJoinPageData } from "@/src/services/participant-service";
 import { getFullName } from "@/src/services/profile-service";
+import { isValidUnlockToken, unlockCookieName } from "@/src/lib/event-unlock";
+
+async function getIsUnlocked(shareToken: string): Promise<boolean> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(unlockCookieName(shareToken))?.value;
+  return token !== undefined && isValidUnlockToken(shareToken, token);
+}
 
 // generateMetadata와 페이지 컴포넌트가 같은 이벤트 데이터를 필요로 하는데, 요청 하나당
 // 실제 조회는 한 번만 나가도록 React cache()로 묶는다.
 const getCachedJoinPageData = cache(
-  async (shareToken: string, userId: string | null) => {
+  async (shareToken: string, userId: string | null, isUnlocked: boolean) => {
     const supabase = await createClient();
-    return getJoinPageData(supabase, shareToken, userId);
+    return getJoinPageData(supabase, shareToken, userId, isUnlocked);
   },
 );
 
@@ -27,9 +36,12 @@ export async function generateMetadata({
   const supabase = await createClient();
   const { data: claims } = await supabase.auth.getClaims();
   const userId = claims?.claims?.sub ?? null;
-  const data = await getCachedJoinPageData(share_token, userId);
+  const isUnlocked = await getIsUnlocked(share_token);
+  const data = await getCachedJoinPageData(share_token, userId, isUnlocked);
 
-  if (!data) {
+  // 링크가 없거나 암호로 잠긴 경우 og:title 등에도 이벤트 정보를 노출하지 않는다
+  // (메신저 미리보기나 페이지 소스로 암호 게이트를 우회해 정보가 새면 안 되므로).
+  if (!data || data.locked) {
     return {};
   }
 
@@ -63,8 +75,9 @@ async function JoinPageContent({
   const supabase = await createClient();
   const { data: claims } = await supabase.auth.getClaims();
   const userId = claims?.claims?.sub ?? null;
+  const isUnlocked = await getIsUnlocked(share_token);
   const [data, loggedInName] = await Promise.all([
-    getCachedJoinPageData(share_token, userId),
+    getCachedJoinPageData(share_token, userId, isUnlocked),
     userId ? getFullName(supabase, userId) : Promise.resolve(""),
   ]);
 
@@ -76,6 +89,15 @@ async function JoinPageContent({
         </p>
         <p className="mt-2 text-sm text-gray-500">링크를 다시 확인해주세요.</p>
       </main>
+    );
+  }
+
+  if (data.locked) {
+    return (
+      <>
+        {userId !== null && <AppHeader />}
+        <PasswordGate shareToken={share_token} />
+      </>
     );
   }
 

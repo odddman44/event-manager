@@ -1,5 +1,6 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import {
   joinEventSchema,
@@ -14,7 +15,9 @@ import {
   reactivateParticipation as reactivateParticipationService,
   countRegisteredByEventId as countRegisteredByEventIdService,
   getEventParticipantRoster as getEventParticipantRosterService,
+  verifyEventPassword as verifyEventPasswordService,
 } from "../services/participant-service";
+import { signUnlockToken, unlockCookieName } from "../lib/event-unlock";
 import type { ParticipantRosterEntry, ParticipantStatus } from "../types";
 
 type JoinEventResult =
@@ -170,6 +173,31 @@ export async function reactivateParticipationAction(
       error: err instanceof Error ? err.message : "재참여에 실패했습니다.",
     };
   }
+}
+
+// #7 암호 보호 — 검증 성공 시 서명된 쿠키를 심어 이 브라우저는 다음부터 다시 안 물어본다.
+export async function verifyEventPasswordAction(
+  shareToken: string,
+  password: string,
+): Promise<ActionResult> {
+  const supabase = await createClient();
+  const isValid = await verifyEventPasswordService(
+    supabase,
+    shareToken,
+    password,
+  );
+  if (!isValid) {
+    return { success: false, error: "암호가 올바르지 않습니다." };
+  }
+
+  const cookieStore = await cookies();
+  cookieStore.set(unlockCookieName(shareToken), signUnlockToken(shareToken), {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 60 * 60 * 24 * 30,
+  });
+  return { success: true };
 }
 
 type GetRosterResult =

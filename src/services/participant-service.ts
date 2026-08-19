@@ -23,12 +23,15 @@ import {
   reactivateParticipation as reactivateParticipationRepository,
   listRegisteredParticipantsForEvent as listRegisteredParticipantsForEventRepository,
 } from "../repositories/participant-repository";
+import { getEventPasswordHash as getEventPasswordHashRepository } from "../repositories/event-password-repository";
+import { verifyPasswordHash } from "../lib/password-hash";
 
 function emptyToUndefined(value?: string): string | undefined {
   return value && value.trim().length > 0 ? value : undefined;
 }
 
-export interface JoinPageData {
+interface UnlockedJoinPageData {
+  locked: false;
   event: Event;
   registeredCount: number;
   isFull: boolean;
@@ -41,19 +44,29 @@ export interface JoinPageData {
   isOrganizer: boolean;
 }
 
+// 암호로 잠긴 이벤트를 아직 못 연 방문자에게는 이벤트 필드 자체를 아예 담지 않는다 —
+// 타입으로 강제해서, 페이지 컴포넌트가 실수로라도 제목/날짜 등을 렌더링에 못 쓰게 막는다.
+export type JoinPageData = UnlockedJoinPageData | { locked: true };
+
 export async function getJoinPageData(
   supabase: SupabaseClient<Database>,
   shareToken: string,
   userId?: string | null,
+  isUnlocked = false,
 ): Promise<JoinPageData | null> {
   const event = await getEventByShareTokenRepository(supabase, shareToken);
   if (!event) {
     return null;
   }
 
-  // 작성자가 자기 공유 링크를 열었는지 여부 — 참여 폼 위에 안내 배너를 띄우는 데만 쓰인다.
+  // 작성자가 자기 공유 링크를 열었는지 여부 — 암호 게이트를 건너뛰고(#7과의 상호작용),
+  // 참여 폼 위에 안내 배너를 띄우는 데(#9) 쓰인다.
   const isOrganizer =
     userId !== null && userId !== undefined && event.organizer_id === userId;
+
+  if (!isOrganizer && event.has_password && !isUnlocked) {
+    return { locked: true };
+  }
 
   const registeredCount = await countRegisteredParticipantsRepository(
     supabase,
@@ -63,7 +76,7 @@ export async function getJoinPageData(
     event.max_participants !== null &&
     registeredCount >= event.max_participants;
 
-  let existingParticipant: JoinPageData["existingParticipant"] = null;
+  let existingParticipant: UnlockedJoinPageData["existingParticipant"] = null;
   if (userId) {
     const participant = await getParticipantByEventAndUserRepository(
       supabase,
@@ -80,7 +93,33 @@ export async function getJoinPageData(
     }
   }
 
-  return { event, registeredCount, isFull, existingParticipant, isOrganizer };
+  return {
+    locked: false,
+    event,
+    registeredCount,
+    isFull,
+    existingParticipant,
+    isOrganizer,
+  };
+}
+
+// #7 암호 보호 — shareToken으로 이벤트를 찾아 event_passwords의 해시와 대조한다.
+// 이벤트가 없거나 애초에 암호가 없으면 false(잠금 해제 실패로 처리 — 호출부가 별도
+// 분기할 필요 없음).
+export async function verifyEventPassword(
+  supabase: SupabaseClient<Database>,
+  shareToken: string,
+  plainPassword: string,
+): Promise<boolean> {
+  const event = await getEventByShareTokenRepository(supabase, shareToken);
+  if (!event || !event.has_password) {
+    return false;
+  }
+  const storedHash = await getEventPasswordHashRepository(event.id);
+  if (!storedHash) {
+    return false;
+  }
+  return verifyPasswordHash(plainPassword, storedHash);
 }
 
 export async function joinEvent(

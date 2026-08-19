@@ -23,6 +23,7 @@ export interface Event {
   max_participants: number | null;
   cover_image_url: string | null;
   members_only: boolean;
+  has_password: boolean;
   share_token: string;
   created_at: string;
 }
@@ -48,6 +49,7 @@ export interface CreateEventDto {
   max_participants?: number;
   cover_image_url?: string;
   members_only?: boolean;
+  has_password?: boolean;
 }
 
 export interface UpdateEventDto {
@@ -58,6 +60,7 @@ export interface UpdateEventDto {
   max_participants?: number;
   cover_image_url?: string;
   members_only?: boolean;
+  has_password?: boolean;
 }
 
 export interface CreateParticipantDto {

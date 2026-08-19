@@ -28,6 +28,7 @@ interface EventFormDefaultValues {
   location: string;
   max_participants?: number;
   members_only: boolean;
+  hasPassword: boolean;
 }
 
 interface EventFormProps {
@@ -85,10 +86,13 @@ export default function EventForm({
       location: defaultValues?.location ?? "",
       max_participants: defaultValues?.max_participants,
       members_only: defaultValues?.members_only ?? false,
+      password: "",
+      remove_password: false,
     },
   });
 
   const description = watch("description") ?? "";
+  const removePassword = watch("remove_password") ?? false;
 
   // 미리보기용 blob: URL은 컴포넌트가 언마운트되거나 새 파일로 교체될 때 해제
   useEffect(() => {
@@ -224,6 +228,46 @@ export default function EventForm({
         <Label htmlFor="members_only" className="cursor-pointer font-normal">
           회원만 참가 가능
         </Label>
+      </div>
+
+      {/* 이벤트 암호 (선택) */}
+      <div className="space-y-1.5">
+        <Label htmlFor="password">이벤트 암호</Label>
+        <Input
+          id="password"
+          type="password"
+          placeholder={
+            mode === "edit"
+              ? "변경하려면 입력, 비워두면 기존 암호 유지"
+              : "비워두면 암호 없이 공개"
+          }
+          disabled={removePassword}
+          {...register("password")}
+        />
+        {errors.password && (
+          <p className="text-sm text-red-500">{errors.password.message}</p>
+        )}
+        {mode === "edit" && defaultValues?.hasPassword && (
+          <div className="flex items-center gap-2 pt-1">
+            <Controller
+              name="remove_password"
+              control={control}
+              render={({ field }) => (
+                <Checkbox
+                  id="remove_password"
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              )}
+            />
+            <Label
+              htmlFor="remove_password"
+              className="cursor-pointer font-normal"
+            >
+              암호 보호 해제
+            </Label>
+          </div>
+        )}
       </div>
 
       {/* 이벤트 설명 (선택, max 500자) */}

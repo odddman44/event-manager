@@ -68,7 +68,9 @@
 
 ---
 
-## #7: 이벤트 암호 보호
+## #7: 이벤트 암호 보호 ✅ 완료
+
+> 설계: `docs/superpowers/specs/2026-08-19-event-password-protection-design.md`
 
 **원문 요청:** "암호를 걸 선택권을 줘서 암호 입력한 자만 들어오게 하는 기능"
 

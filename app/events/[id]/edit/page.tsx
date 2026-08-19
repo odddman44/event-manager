@@ -35,6 +35,7 @@ async function EditEventContent({
             location: event.location ?? "",
             max_participants: event.max_participants ?? undefined,
             members_only: event.members_only,
+            hasPassword: event.has_password,
           }}
           existingCoverImageUrl={event.cover_image_url}
         />

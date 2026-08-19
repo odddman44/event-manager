@@ -15,6 +15,11 @@ import {
   deleteEvent as deleteEventRepository,
   listEventsByParticipantUserId as listEventsByParticipantUserIdRepository,
 } from "../repositories/event-repository";
+import {
+  upsertEventPassword,
+  deleteEventPassword,
+} from "../repositories/event-password-repository";
+import { hashPassword } from "../lib/password-hash";
 
 function emptyToUndefined(value?: string): string | undefined {
   return value && value.trim().length > 0 ? value : undefined;
@@ -39,7 +44,8 @@ export async function createEvent(
     );
   }
 
-  return createEventRepository(supabase, organizerId, {
+  const hasPassword = Boolean(input.password);
+  const event = await createEventRepository(supabase, organizerId, {
     title: input.title,
     description: emptyToUndefined(input.description),
     event_date: input.event_date,
@@ -47,7 +53,16 @@ export async function createEvent(
     max_participants: input.max_participants,
     cover_image_url: coverImageUrl,
     members_only: input.members_only,
+    has_password: hasPassword,
   });
+
+  // 이벤트 행 자체와는 별개 저장소(event_passwords)라 실패해도 이벤트 생성을
+  // 되돌리지 않는다 — joinEvent의 사후 정리와 같은 수준의 best-effort로 충분하다고 판단.
+  if (hasPassword) {
+    await upsertEventPassword(event.id, hashPassword(input.password!));
+  }
+
+  return event;
 }
 
 export async function listEventsByOrganizer(
@@ -153,6 +168,17 @@ export async function updateEvent(
     }
   }
 
+  // remove_password가 켜져 있으면 무조건 해제, 아니면 새 암호 입력이 있을 때만
+  // 교체(비워두면 기존 암호 유지 — event_passwords를 건드리지 않는다).
+  let hasPassword = event.has_password;
+  if (input.remove_password) {
+    await deleteEventPassword(eventId);
+    hasPassword = false;
+  } else if (input.password) {
+    await upsertEventPassword(eventId, hashPassword(input.password));
+    hasPassword = true;
+  }
+
   return updateEventRepository(supabase, eventId, {
     title: input.title,
     description: emptyToUndefined(input.description),
@@ -161,6 +187,7 @@ export async function updateEvent(
     max_participants: input.max_participants,
     cover_image_url: coverImageUrl,
     members_only: input.members_only,
+    has_password: hasPassword,
   });
 }
 

@@ -275,3 +275,80 @@ test.describe("participants 테이블 RLS", () => {
     expect(selectBody).toEqual([]);
   });
 });
+
+// ──────────────────────────────────────────────
+// event_passwords 테이블 직접 접근 차단 (#7 암호 보호의 RLS 보안 회귀)
+// ──────────────────────────────────────────────
+test.describe("event_passwords 테이블 RLS", () => {
+  test("비로그인 상태로 REST에 직접 INSERT/SELECT 요청을 보내도 거부된다", async ({
+    request,
+  }) => {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
+
+    // 이 테이블은 정책을 하나도 안 만든 완전 잠금 상태다(participants와 동일한 패턴) —
+    // event_id가 실존하는지 여부와 무관하게 RLS가 INSERT 자체를 거부해야 한다.
+    const adminDb = createServiceRoleClient();
+    const { data: organizer, error: organizerError } = await adminDb
+      .from("profiles")
+      .select("id")
+      .eq("email", process.env.TEST_USER_EMAIL!)
+      .single();
+    if (organizerError || !organizer) {
+      throw new Error(
+        `테스트용 organizer 프로필을 찾지 못했습니다: ${organizerError?.message}`,
+      );
+    }
+    const { data: event, error: eventError } = await adminDb
+      .from("events")
+      .insert({
+        organizer_id: organizer.id,
+        title: "event_passwords RLS 회귀 테스트용 이벤트",
+        event_date: new Date().toISOString(),
+      })
+      .select("id")
+      .single();
+    if (eventError || !event) {
+      throw new Error(
+        `테스트용 이벤트 생성에 실패했습니다: ${eventError?.message}`,
+      );
+    }
+
+    const insertResponse = await request.post(
+      `${supabaseUrl}/rest/v1/event_passwords`,
+      {
+        headers: {
+          apikey: publishableKey,
+          Authorization: `Bearer ${publishableKey}`,
+          "Content-Type": "application/json",
+        },
+        data: { event_id: event.id, password_hash: "aa:bb" },
+      },
+    );
+    expect(insertResponse.status()).toBe(401);
+    const insertBody = await insertResponse.json();
+    expect(insertBody.code).toBe("42501");
+
+    const { error: passwordError } = await adminDb
+      .from("event_passwords")
+      .insert({ event_id: event.id, password_hash: "aa:bb" });
+    if (passwordError) {
+      throw new Error(
+        `테스트용 event_passwords 행 생성에 실패했습니다: ${passwordError.message}`,
+      );
+    }
+
+    const selectResponse = await request.get(
+      `${supabaseUrl}/rest/v1/event_passwords?select=*&limit=1`,
+      {
+        headers: {
+          apikey: publishableKey,
+          Authorization: `Bearer ${publishableKey}`,
+        },
+      },
+    );
+    expect(selectResponse.ok()).toBe(true);
+    const selectBody = await selectResponse.json();
+    expect(selectBody).toEqual([]);
+  });
+});

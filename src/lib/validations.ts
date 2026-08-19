@@ -28,6 +28,10 @@ export const createEventSchema = z.object({
     .positive("정원은 1명 이상이어야 합니다")
     .optional(),
   members_only: z.boolean().optional().default(false),
+  // 빈 문자열/미입력은 "변경 없음"으로 취급한다(생성 시엔 "암호 없음"). 72자 상한은
+  // 특별한 의미 없이 넉넉하게 잡은 값이다.
+  password: z.string().max(72, "암호는 72자 이하여야 합니다").optional(),
+  remove_password: z.boolean().optional().default(false),
 });
 
 export const joinEventSchema = z.object({
