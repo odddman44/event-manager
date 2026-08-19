@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { formatEventDate } from "@/src/lib/format-event-date";
 import {
   joinEventAction,
   getParticipantByGuestTokenAction,
@@ -29,20 +30,6 @@ type PageState = "form" | "completed" | "cancelled" | "full" | "choice";
 
 function guestTokenKey(shareToken: string): string {
   return `moija_guest_token_${shareToken}`;
-}
-
-// 날짜 포맷 변환 헬퍼 (서버 렌더링과 클라이언트 하이드레이션이 항상 동일한 값을
-// 내도록 실행 환경 타임존과 무관하게 KST로 고정)
-function formatDate(iso: string): string {
-  const d = new Date(iso);
-  return d.toLocaleString("ko-KR", {
-    timeZone: "Asia/Seoul",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 }
 
 // 이벤트 정보 카드 (모든 상태에서 공통 표시)
@@ -68,7 +55,7 @@ function EventInfoCard({
         <div className="space-y-2 text-sm text-gray-600">
           <div className="flex items-center gap-2">
             <CalendarDays className="text-primary size-4 shrink-0" />
-            <span>{formatDate(event.event_date)}</span>
+            <span>{formatEventDate(event)}</span>
           </div>
           <div className="flex items-center gap-2">
             <MapPin className="text-primary size-4 shrink-0" />

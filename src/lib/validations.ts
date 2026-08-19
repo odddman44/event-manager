@@ -14,25 +14,36 @@ export const signUpSchema = z.object({
   password: z.string().min(6, "비밀번호는 최소 6자 이상이어야 합니다"),
 });
 
-export const createEventSchema = z.object({
-  title: z
-    .string()
-    .min(1, "이벤트 제목을 입력해주세요")
-    .max(100, "제목은 100자 이하여야 합니다"),
-  description: z.string().max(500, "설명은 500자 이하여야 합니다").optional(),
-  event_date: z.string().min(1, "이벤트 날짜를 선택해주세요"),
-  location: z.string().max(200, "장소는 200자 이하여야 합니다").optional(),
-  max_participants: z
-    .number()
-    .int("정원은 정수여야 합니다")
-    .positive("정원은 1명 이상이어야 합니다")
-    .optional(),
-  members_only: z.boolean().optional().default(false),
-  // 빈 문자열/미입력은 "변경 없음"으로 취급한다(생성 시엔 "암호 없음"). 72자 상한은
-  // 특별한 의미 없이 넉넉하게 잡은 값이다.
-  password: z.string().max(72, "암호는 72자 이하여야 합니다").optional(),
-  remove_password: z.boolean().optional().default(false),
-});
+export const createEventSchema = z
+  .object({
+    title: z
+      .string()
+      .min(1, "이벤트 제목을 입력해주세요")
+      .max(100, "제목은 100자 이하여야 합니다"),
+    description: z.string().max(500, "설명은 500자 이하여야 합니다").optional(),
+    event_date: z.string().min(1, "이벤트 날짜를 선택해주세요"),
+    // 여러 날 모임(#4) — 비워두면 기존과 동일한 단일 날짜 이벤트.
+    end_date: z.string().optional(),
+    location: z.string().max(200, "장소는 200자 이하여야 합니다").optional(),
+    max_participants: z
+      .number()
+      .int("정원은 정수여야 합니다")
+      .positive("정원은 1명 이상이어야 합니다")
+      .optional(),
+    members_only: z.boolean().optional().default(false),
+    // 빈 문자열/미입력은 "변경 없음"으로 취급한다(생성 시엔 "암호 없음"). 72자 상한은
+    // 특별한 의미 없이 넉넉하게 잡은 값이다.
+    password: z.string().max(72, "암호는 72자 이하여야 합니다").optional(),
+    remove_password: z.boolean().optional().default(false),
+  })
+  .refine(
+    (data) =>
+      !data.end_date || new Date(data.end_date) >= new Date(data.event_date),
+    {
+      message: "종료일은 시작일 이후여야 합니다",
+      path: ["end_date"],
+    },
+  );
 
 export const joinEventSchema = z.object({
   name: z

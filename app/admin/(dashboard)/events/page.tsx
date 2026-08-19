@@ -3,6 +3,7 @@ import { AdminDeleteButton } from "@/components/admin-delete-button";
 import { createClient } from "@/lib/supabase/server";
 import { listAllEvents } from "@/src/services/admin-service";
 import { deleteEventAction } from "@/src/controllers/admin-controller";
+import { formatEventDate } from "@/src/lib/format-event-date";
 
 function formatDate(isoString: string): string {
   return new Date(isoString).toLocaleDateString("ko-KR", {
@@ -57,7 +58,7 @@ async function AdminEventsContent() {
                     {event.organizer_name}
                   </td>
                   <td className="text-muted-foreground px-4 py-3">
-                    {formatDate(event.event_date)}
+                    {formatEventDate(event, false)}
                   </td>
                   <td className="px-4 py-3 text-right font-semibold">
                     {event.participant_count}

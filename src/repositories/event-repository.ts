@@ -21,6 +21,7 @@ export async function createEvent(
       title: dto.title,
       description: dto.description ?? null,
       event_date: dto.event_date,
+      end_date: dto.end_date ?? null,
       location: dto.location ?? null,
       max_participants: dto.max_participants ?? null,
       cover_image_url: dto.cover_image_url ?? null,
@@ -225,6 +226,7 @@ export async function updateEvent(
         description: dto.description ?? null,
       }),
       ...(dto.event_date !== undefined && { event_date: dto.event_date }),
+      ...(dto.end_date !== undefined && { end_date: dto.end_date }),
       ...(dto.location !== undefined && { location: dto.location ?? null }),
       ...(dto.max_participants !== undefined && {
         max_participants: dto.max_participants ?? null,

@@ -16,6 +16,7 @@ import {
 import { isOnboardingPending } from "@/src/services/profile-service";
 import { completeOnboardingAction } from "@/src/controllers/profile-controller";
 import { OnboardingCallout } from "@/components/onboarding/onboarding-callout";
+import { formatEventDate } from "@/src/lib/format-event-date";
 
 // 날짜 포맷: 2025년 10월 21일 오후 3:36 (서버 실행 위치와 무관하게 KST 고정)
 function formatDate(isoString: string): string {
@@ -92,7 +93,7 @@ async function EventDetailContent({
         <div className="text-muted-foreground mb-4 space-y-2 text-sm">
           <div className="flex items-center gap-2">
             <CalendarDays className="text-primary h-4 w-4 shrink-0" />
-            <span>{formatDate(event.event_date)}</span>
+            <span>{formatEventDate(event)}</span>
           </div>
           <div className="flex items-center gap-2">
             <MapPin className="text-primary h-4 w-4 shrink-0" />

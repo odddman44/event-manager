@@ -23,6 +23,7 @@ async function createEvent(
     maxParticipants?: number;
     membersOnly?: boolean;
     password?: string;
+    endDate?: string;
   } = {},
 ): Promise<{ title: string; eventId: string; shareToken: string }> {
   const title = `E2E 이벤트 ${Date.now()}-${Math.floor(Math.random() * 1000)}`;
@@ -30,6 +31,9 @@ async function createEvent(
   await page.goto("/events/new");
   await page.locator("input#title").fill(title);
   await page.locator("input#event_date").fill("2026-12-31T19:00");
+  if (options.endDate !== undefined) {
+    await page.locator("input#end_date").fill(options.endDate);
+  }
   if (options.maxParticipants !== undefined) {
     await page
       .locator("input#max_participants")
@@ -312,6 +316,28 @@ test.describe("이벤트 관리 /events/{id}", () => {
 
     await page.goto(`/events/${eventId}/edit`);
     await expect(page.locator("#members_only")).not.toBeChecked();
+  });
+
+  test("종료일을 입력하면 상세 페이지에 날짜 범위로 표시된다(백로그 #4)", async ({
+    page,
+  }) => {
+    const { eventId } = await createEvent(page, {
+      endDate: "2027-01-02T12:00",
+    });
+    await page.goto(`/events/${eventId}`);
+    // 상세 페이지는 Suspense로 감싼 서버 컴포넌트라 URL 전환 직후에는 아직
+    // 본문이 렌더링되지 않았을 수 있다. 네트워크가 잦아들 때까지 기다린다.
+    await page.waitForLoadState("networkidle");
+    // 특정 요소를 로케이터로 집으면 마크업이 바뀔 때 깨지므로 페이지 텍스트 전체에서 찾는다.
+    const rangeBodyText = await page.locator("body").innerText();
+    expect(rangeBodyText).toContain("~");
+
+    // 단일 날짜 이벤트(회귀) — 범위 표시가 없어야 한다.
+    const { eventId: singleDayId } = await createEvent(page);
+    await page.goto(`/events/${singleDayId}`);
+    await page.waitForLoadState("networkidle");
+    const singleDayBodyText = await page.locator("body").innerText();
+    expect(singleDayBodyText).not.toContain("~");
   });
 });
 

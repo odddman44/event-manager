@@ -19,6 +19,7 @@ export interface Event {
   title: string;
   description: string | null;
   event_date: string;
+  end_date: string | null;
   location: string | null;
   max_participants: number | null;
   cover_image_url: string | null;
@@ -45,6 +46,7 @@ export interface CreateEventDto {
   title: string;
   description?: string;
   event_date: string;
+  end_date?: string;
   location?: string;
   max_participants?: number;
   cover_image_url?: string;
@@ -56,6 +58,7 @@ export interface UpdateEventDto {
   title?: string;
   description?: string;
   event_date?: string;
+  end_date?: string;
   location?: string;
   max_participants?: number;
   cover_image_url?: string;

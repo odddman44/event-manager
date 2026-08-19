@@ -45,6 +45,7 @@ export type Database = {
           cover_image_url: string | null;
           created_at: string;
           description: string | null;
+          end_date: string | null;
           event_date: string;
           has_password: boolean;
           id: string;
@@ -59,6 +60,7 @@ export type Database = {
           cover_image_url?: string | null;
           created_at?: string;
           description?: string | null;
+          end_date?: string | null;
           event_date: string;
           has_password?: boolean;
           id?: string;
@@ -73,6 +75,7 @@ export type Database = {
           cover_image_url?: string | null;
           created_at?: string;
           description?: string | null;
+          end_date?: string | null;
           event_date?: string;
           has_password?: boolean;
           id?: string;

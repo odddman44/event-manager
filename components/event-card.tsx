@@ -1,19 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import type { EventWithParticipantCount } from "@/src/types";
-
-// 날짜 포맷: 2025년 10월 21일 오후 3:36 (서버 실행 위치와 무관하게 KST 고정)
-function formatDate(isoString: string): string {
-  return new Date(isoString).toLocaleString("ko-KR", {
-    timeZone: "Asia/Seoul",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
-}
+import { formatEventDate } from "@/src/lib/format-event-date";
 
 // 참여 현황에 따라 뱃지 색상 결정 (정원 없으면 항상 모집 중)
 function getStatusBadge(registered: number, max: number | null) {
@@ -77,7 +65,7 @@ export function EventCard({ event, href }: EventCardProps) {
       </div>
 
       <div className="text-muted-foreground space-y-1 text-sm">
-        <p>📅 {formatDate(event.event_date)}</p>
+        <p>📅 {formatEventDate(event)}</p>
         <p>📍 {event.location ?? "장소 미정"}</p>
         <p>
           👥 {event.participant_count}

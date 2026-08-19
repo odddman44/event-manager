@@ -25,6 +25,7 @@ interface EventFormDefaultValues {
   title: string;
   description: string;
   event_date: string; // ISO 문자열
+  end_date: string | null; // ISO 문자열, null이면 단일 날짜
   location: string;
   max_participants?: number;
   members_only: boolean;
@@ -83,6 +84,9 @@ export default function EventForm({
       event_date: defaultValues?.event_date
         ? toDatetimeLocalValue(defaultValues.event_date)
         : "",
+      end_date: defaultValues?.end_date
+        ? toDatetimeLocalValue(defaultValues.end_date)
+        : "",
       location: defaultValues?.location ?? "",
       max_participants: defaultValues?.max_participants,
       members_only: defaultValues?.members_only ?? false,
@@ -124,6 +128,9 @@ export default function EventForm({
       ...data,
       // datetime-local 값은 타임존 정보가 없어 브라우저 로컬 시간대로 해석되므로 UTC ISO 문자열로 변환
       event_date: new Date(data.event_date).toISOString(),
+      end_date: data.end_date
+        ? new Date(data.end_date).toISOString()
+        : undefined,
     };
 
     try {
@@ -177,6 +184,18 @@ export default function EventForm({
         />
         {errors.event_date && (
           <p className="text-sm text-red-500">{errors.event_date.message}</p>
+        )}
+      </div>
+
+      {/* 종료 날짜 및 시간 (선택 — 여러 날 모임인 경우) */}
+      <div className="space-y-1.5">
+        <Label htmlFor="end_date">종료 날짜 및 시간</Label>
+        <Input id="end_date" type="datetime-local" {...register("end_date")} />
+        <p className="text-muted-foreground text-xs">
+          여러 날에 걸친 모임이면 입력하세요. 비워두면 단일 날짜 모임입니다.
+        </p>
+        {errors.end_date && (
+          <p className="text-sm text-red-500">{errors.end_date.message}</p>
         )}
       </div>
 
