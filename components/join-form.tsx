@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 import { ArrowLeft, CalendarDays, MapPin, User, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -129,6 +130,7 @@ interface JoinFormProps {
   } | null;
   isLoggedIn: boolean;
   loggedInName: string;
+  isOrganizer: boolean;
 }
 
 export default function JoinForm({
@@ -139,6 +141,7 @@ export default function JoinForm({
   existingParticipant,
   isLoggedIn,
   loggedInName,
+  isOrganizer,
 }: JoinFormProps) {
   const router = useRouter();
   const [state, setState] = useState<PageState>(() => {
@@ -296,6 +299,20 @@ export default function JoinForm({
   return (
     <main className="flex min-h-screen flex-col items-center bg-gray-50 px-4 py-6 pb-6">
       <div className="w-full max-w-sm space-y-4">
+        {/* 작성자가 자기 공유 링크로 들어온 경우 안내 배너 — 참여자로서 미리보기도
+            가능하도록 리다이렉트 대신 배너로만 안내한다 */}
+        {isOrganizer && (
+          <div className="rounded-card flex items-center justify-between gap-3 border border-blue-100 bg-blue-50 p-3 text-sm">
+            <span className="text-blue-700">이건 당신의 모임입니다</span>
+            <Link
+              href={`/events/${event.id}`}
+              className="text-primary shrink-0 font-medium hover:underline"
+            >
+              관리하기 →
+            </Link>
+          </div>
+        )}
+
         {/* 공통: 이벤트 정보 카드 */}
         <EventInfoCard event={event} registeredCount={count} />
 

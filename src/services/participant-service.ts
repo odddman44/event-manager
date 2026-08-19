@@ -38,6 +38,7 @@ export interface JoinPageData {
     memo: string | null;
     status: ParticipantStatus;
   } | null;
+  isOrganizer: boolean;
 }
 
 export async function getJoinPageData(
@@ -49,6 +50,10 @@ export async function getJoinPageData(
   if (!event) {
     return null;
   }
+
+  // 작성자가 자기 공유 링크를 열었는지 여부 — 참여 폼 위에 안내 배너를 띄우는 데만 쓰인다.
+  const isOrganizer =
+    userId !== null && userId !== undefined && event.organizer_id === userId;
 
   const registeredCount = await countRegisteredParticipantsRepository(
     supabase,
@@ -75,7 +80,7 @@ export async function getJoinPageData(
     }
   }
 
-  return { event, registeredCount, isFull, existingParticipant };
+  return { event, registeredCount, isFull, existingParticipant, isOrganizer };
 }
 
 export async function joinEvent(

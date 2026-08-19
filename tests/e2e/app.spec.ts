@@ -428,6 +428,55 @@ test.describe("참여 페이지 /join/{share_token}", () => {
     await authed.close();
   });
 
+  test("작성자가 자기 공유 링크를 열면 안내 배너와 앱 헤더가 보이고, 다른 회원에게는 안 보인다(백로그 #8/#9)", async ({
+    browser,
+  }) => {
+    const organizerContext = await browser.newContext({
+      baseURL: BASE_URL,
+      storageState: "tests/.auth/user.json",
+    });
+    const organizerPage = await organizerContext.newPage();
+    const { eventId, shareToken } = await createEvent(organizerPage);
+
+    // 작성자 본인 — 배너와 "모이자" 앱 헤더(로그인 상태에서만 노출)가 함께 보여야 한다.
+    await organizerPage.goto(`/join/${shareToken}`);
+    await expect(
+      organizerPage.getByText("이건 당신의 모임입니다"),
+    ).toBeVisible();
+    const manageLink = organizerPage.getByRole("link", { name: "관리하기 →" });
+    await expect(manageLink).toHaveAttribute("href", `/events/${eventId}`);
+    await expect(
+      organizerPage.getByRole("link", { name: "모이자" }),
+    ).toBeVisible();
+    await organizerContext.close();
+
+    // 다른 회원(어드민 계정) — 같은 링크를 열어도 배너는 보이면 안 된다.
+    const otherContext = await browser.newContext({
+      baseURL: BASE_URL,
+      storageState: "tests/.auth/admin.json",
+    });
+    const otherPage = await otherContext.newPage();
+    await otherPage.goto(`/join/${shareToken}`);
+    await expect(
+      otherPage.getByText("이건 당신의 모임입니다"),
+    ).not.toBeVisible();
+    // 로그인은 했으니 헤더는 보여야 한다(#8) — 배너 유무와는 독립적인 조건.
+    await expect(otherPage.getByRole("link", { name: "모이자" })).toBeVisible();
+    await otherContext.close();
+
+    // 비로그인 방문자 — 배너도 헤더도 없어야 한다(기존 미니멀 페이지 유지, 회귀 방지).
+    const anonContext = await browser.newContext({ baseURL: BASE_URL });
+    const anonPage = await anonContext.newPage();
+    await anonPage.goto(`/join/${shareToken}`);
+    await expect(
+      anonPage.getByText("이건 당신의 모임입니다"),
+    ).not.toBeVisible();
+    await expect(
+      anonPage.getByRole("link", { name: "모이자" }),
+    ).not.toBeVisible();
+    await anonContext.close();
+  });
+
   test("참여자 명단에 회원/비회원이 뱃지와 함께 보인다", async ({
     browser,
   }) => {
